@@ -18,11 +18,24 @@ python3 tools/flatpak-cargo-sources.py
 
 ## Lint (what Flathub checks)
 
+Flathub builds with the `flatpak-builder` bundled in `org.flatpak.Builder`, mirrors the
+screenshots and writes full media URLs. To reproduce that locally:
+
 ```sh
 flatpak install --user flathub org.flatpak.Builder
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest build-aux/flatpak/dev.alananaya.Amoxtli.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder appstream data/dev.alananaya.Amoxtli.metainfo.xml
+
+# full build + repo lint (screenshots must already be reachable at the tagged URLs)
+flatpak run org.flatpak.Builder --user --disable-rofiles-fuse --force-clean \
+  --install-deps-from=flathub --mirror-screenshots-url=https://dl.flathub.org/media \
+  --compose-url-policy=full --repo=repo builddir build-aux/flatpak/dev.alananaya.Amoxtli.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```
+
+`--disable-rofiles-fuse` is only needed where FUSE can't be used from inside the
+Builder sandbox. If you change the compose options, delete `.flatpak-builder/` first:
+its cache doesn't track them.
 
 ## Submitting to Flathub
 
