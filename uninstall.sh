@@ -16,5 +16,16 @@ OLD_ID=io.github.amoxtli.Amoxtli
 rm -f "$PREFIX/share/applications/$OLD_ID.desktop" "$PREFIX/share/metainfo/$OLD_ID.metainfo.xml" \
   "$PREFIX/share/icons/hicolor/scalable/apps/$OLD_ID.svg" "$PREFIX/share/icons/hicolor/symbolic/apps/$OLD_ID-symbolic.svg"
 
+# refresh the icon cache: a stale one keeps pointing at the deleted icons and hides
+# the same icon provided by another install (e.g. the Flatpak)
+ICONS="$PREFIX/share/icons/hicolor"
+if [ -f "$ICONS/icon-theme.cache" ]; then
+  if find "$ICONS" -type f ! -name icon-theme.cache ! -name index.theme | grep -q .; then
+    gtk-update-icon-cache -q -t -f "$ICONS" 2>/dev/null || rm -f "$ICONS/icon-theme.cache"
+  else
+    rm -f "$ICONS/icon-theme.cache"
+  fi
+fi
+
 command -v update-desktop-database >/dev/null && update-desktop-database -q "$PREFIX/share/applications" || true
 echo "Amoxtli removed from $PREFIX"
