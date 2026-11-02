@@ -4,7 +4,7 @@
   <name>Amoxtli</name>
   <summary>Read Markdown documents natively</summary>
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>GPL-3.0-or-later</project_license>
+  <project_license>MIT</project_license>
   <description>
     <p>Amoxtli (“book” in Nahuatl) is a fast, native Markdown viewer built with GTK 4 and libadwaita.</p>
     <ul>

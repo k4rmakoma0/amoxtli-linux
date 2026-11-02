@@ -3,7 +3,7 @@ name = "amoxtli"
 version = "1.0.0"
 edition = "2021"
 description = "A native Markdown viewer for GNOME and Linux"
-license = "GPL-3.0-or-later"
+license = "MIT"
 
 [dependencies]
 gtk = { package = "gtk4", version = "0.11", features = ["gnome_50"] }

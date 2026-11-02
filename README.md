@@ -93,3 +93,7 @@ po/                  translations (.po) and template (.pot)
 tools/i18n.py        extract / merge / compile / check translations
 data/                .desktop entry, AppStream metainfo, icons
 ```
+
+## License
+
+Amoxtli is open source under the [MIT License](LICENSE).

@@ -151,7 +151,7 @@ fn about(app: &adw::Application) {
         .developer_name(tr("Amoxtli Contributors"))
         .version(VERSION)
         .comments(format!("{}\n{}", tr("A native Markdown viewer for GNOME and Linux."), tr("Amoxtli means “book” in Nahuatl.")))
-        .license_type(gtk::License::Gpl30)
+        .license_type(gtk::License::MitX11)
         .build();
     let credits = tr("translator-credits");
     if credits != "translator-credits" {
