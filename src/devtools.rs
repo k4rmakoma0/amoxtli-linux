@@ -6,6 +6,7 @@
 //! AMOXTLI_SNAPSHOT_HEADING=n       scroll to the n-th heading
 //! AMOXTLI_SNAPSHOT_SEARCH=text     open the search bar with this text
 //! AMOXTLI_SNAPSHOT_SELECT=n        select the first n characters
+//! AMOXTLI_SNAPSHOT_EXPAND=1        expand top-level folders in the Files panel
 
 use adw::prelude::*;
 use gtk::{glib, graphene};

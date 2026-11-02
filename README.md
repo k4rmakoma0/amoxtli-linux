@@ -4,6 +4,19 @@
 **Rust** with **GTK 4 + libadwaita** so it looks and behaves like a first-class GNOME app.
 It ships as a single ~4 MB binary.
 
+![Amoxtli showing a Markdown document with its table of contents](data/screenshots/light.png)
+
+<table>
+  <tr>
+    <td><img src="data/screenshots/dark.png" alt="Dark mode with alerts, syntax-highlighted code and a table"></td>
+    <td><img src="data/screenshots/folder.png" alt="Browsing a folder of Markdown notes"></td>
+  </tr>
+  <tr>
+    <td align="center">Dark mode, alerts, code and tables</td>
+    <td align="center">Browse a whole folder of notes</td>
+  </tr>
+</table>
+
 There is no embedded browser. Markdown is rendered straight into native widgets:
 Pango-shaped text in a `GtkTextView`, tables as `GtkGrid`s, images as GPU textures.
 

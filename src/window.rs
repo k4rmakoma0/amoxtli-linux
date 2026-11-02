@@ -920,6 +920,9 @@ impl Window {
                 self.scroll_to_heading(h);
             }
         }
+        if std::env::var("AMOXTLI_SNAPSHOT_EXPAND").is_ok() {
+            self.files.expand_top_level();
+        }
         if let Ok(text) = std::env::var("AMOXTLI_SNAPSHOT_SEARCH") {
             self.search_bar.set_search_mode(true);
             self.search_entry.set_text(&text);

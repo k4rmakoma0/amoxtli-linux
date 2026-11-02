@@ -15,6 +15,22 @@
       <li>Tables, task lists, images and syntax-highlighted code</li>
     </ul>
   </description>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/main/data/screenshots/light.png</image>
+      <caption>A Markdown document with its table of contents</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/main/data/screenshots/dark.png</image>
+      <caption>Dark mode with alerts, code and tables</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/main/data/screenshots/folder.png</image>
+      <caption>Browsing a folder of notes</caption>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">https://github.com/k4rmakoma0/amoxtli-linux</url>
+  <url type="bugtracker">https://github.com/k4rmakoma0/amoxtli-linux/issues</url>
   <launchable type="desktop-id">io.github.amoxtli.Amoxtli.desktop</launchable>
   <provides><mediatype>text/markdown</mediatype></provides>
   <content_rating type="oars-1.1"/>

@@ -241,6 +241,19 @@ impl FilesPanel {
         self.on_activate.replace(Some(Rc::new(f)));
     }
 
+    /// Expand every top-level folder (used for screenshots).
+    #[cfg(debug_assertions)]
+    pub fn expand_top_level(&self) {
+        let Some(model) = self.selection.model() else { return };
+        for i in 0..model.n_items() {
+            if let Some(row) = model.item(i).and_downcast::<gtk::TreeListRow>() {
+                if row.is_expandable() {
+                    row.set_expanded(true);
+                }
+            }
+        }
+    }
+
     pub fn set_root(&self, folder: &gio::File) {
         if self.root.borrow().as_ref().is_some_and(|r| r.equal(folder)) {
             return;
