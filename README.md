@@ -40,9 +40,16 @@ Pango-shaped text in a `GtkTextView`, tables as `GtkGrid`s, images as GPU textur
 
 ## Download
 
-Grab the prebuilt x86_64 binary from the
-[latest release](https://github.com/k4rmakoma0/amoxtli-linux/releases/latest)
-(needs GTK ≥ 4.20 and libadwaita ≥ 1.8, i.e. GNOME 49+ such as Ubuntu 26.04/26.10):
+From the [latest release](https://github.com/k4rmakoma0/amoxtli-linux/releases/latest):
+
+**Flatpak** (any distribution; the GNOME runtime is fetched from Flathub on install):
+
+```sh
+flatpak install --user amoxtli-1.1.0-x86_64.flatpak
+flatpak run dev.alananaya.Amoxtli
+```
+
+**Prebuilt binary** (needs GTK ≥ 4.20 and libadwaita ≥ 1.8, i.e. GNOME 49+):
 
 ```sh
 tar xzf amoxtli-1.1.0-x86_64-linux.tar.gz
@@ -50,7 +57,7 @@ cd amoxtli-1.1.0-x86_64-linux
 ./install.sh            # or ./install.sh --default to make it your Markdown viewer
 ```
 
-Or build it from source as described below. A Flatpak manifest lives in
+Or build it from source as described below. The Flatpak manifest lives in
 [`build-aux/flatpak`](build-aux/flatpak/README.md).
 
 ## Requirements

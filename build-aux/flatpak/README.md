@@ -37,22 +37,25 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 Builder sandbox. If you change the compose options, delete `.flatpak-builder/` first:
 its cache doesn't track them.
 
-## Submitting to Flathub
+## Single-file bundle (GitHub releases)
 
-1. Tag a release (e.g. `v1.1.0`) and push it.
-2. Fork <https://github.com/flathub/flathub> and create a branch from its `new-pr` branch.
-3. Add `dev.alananaya.Amoxtli.yml` (this manifest, with the `dir` source replaced by the
-   tagged git source below) and `cargo-sources.json`:
+Bundles can't carry the separate `.Locale` extension, so build them with
+`separate-locales: false` added to the manifest, then:
 
-   ```yaml
-       sources:
-         - type: git
-           url: https://github.com/k4rmakoma0/amoxtli-linux.git
-           tag: v1.1.0
-           commit: <full commit hash of the tag>
-         - cargo-sources.json
-   ```
+```sh
+flatpak-builder --user --force-clean --repo=repo --default-branch=stable builddir <manifest>
+flatpak build-bundle repo amoxtli-<version>-x86_64.flatpak dev.alananaya.Amoxtli stable \
+  --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+```
 
-4. Open a pull request against `new-pr` titled **Add dev.alananaya.Amoxtli**.
-5. Once published, verify the app in the Flathub developer portal: it gives you a token
-   to serve at `https://alananaya.dev/.well-known/org.flathub.VerifiedApps.txt`.
+## Flathub
+
+Amoxtli is **not** on Flathub. Flathub's
+[Generative AI policy](https://docs.flathub.org/docs/for-app-authors/requirements)
+requires disclosing AI-generated material, does not allow AI-generated or AI-assisted
+content in Flathub manifests, and does not allow AI tools to open or write submission
+pull requests. Large parts of this project, including this manifest and the
+`tools/flatpak-cargo-sources.py` output, were written with an AI assistant, so a Flathub
+submission would need a manifest written by hand, crate sources generated with the
+official `flatpak-cargo-generator`, a pull request opened and written by the maintainer,
+and a disclosure of the AI-generated parts of the application.
