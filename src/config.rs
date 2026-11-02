@@ -8,18 +8,29 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const MIME_TYPES: &[&str] = &["text/markdown", "text/x-markdown"];
 pub const GETTEXT_DOMAIN: &str = "amoxtli";
 
-/// Where compiled translations live. Set at build time by install.sh;
-/// when running from a source checkout we use `target/locale`.
+/// The install prefix when running an installed binary (`<prefix>/bin/amoxtli`).
+fn install_prefix() -> Option<PathBuf> {
+    let exe = std::env::current_exe().ok()?.canonicalize().ok()?;
+    let bin = exe.parent()?;
+    (bin.file_name()? == "bin").then(|| bin.parent().map(PathBuf::from)).flatten()
+}
+
+/// Where compiled translations live: `<prefix>/share/locale` for an installed
+/// binary (any prefix), `target/locale` when running from a source checkout.
+/// `AMOXTLI_LOCALEDIR` at build time overrides both (for distro packaging).
 pub fn locale_dir() -> PathBuf {
-    match option_env!("AMOXTLI_LOCALEDIR") {
-        Some(dir) => PathBuf::from(dir),
+    if let Some(dir) = option_env!("AMOXTLI_LOCALEDIR") {
+        return PathBuf::from(dir);
+    }
+    match install_prefix() {
+        Some(prefix) => prefix.join("share").join("locale"),
         None => PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/target/locale")),
     }
 }
 
 /// Icons for an uninstalled (development) build.
 pub fn dev_icon_dir() -> Option<PathBuf> {
-    if option_env!("AMOXTLI_LOCALEDIR").is_some() {
+    if install_prefix().is_some() {
         return None;
     }
     let dir = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/data/icons"));

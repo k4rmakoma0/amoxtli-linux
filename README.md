@@ -38,6 +38,20 @@ Pango-shaped text in a `GtkTextView`, tables as `GtkGrid`s, images as GPU textur
 - Translated into Spanish, Portuguese (Brazil), French, German, Italian, Russian,
   Chinese (Simplified), Japanese and Korean — follows the system language
 
+## Download
+
+Grab the prebuilt x86_64 binary from the
+[latest release](https://github.com/k4rmakoma0/amoxtli-linux/releases/latest)
+(needs GTK ≥ 4.22 and libadwaita ≥ 1.8, i.e. GNOME 49+ such as Ubuntu 26.04/26.10):
+
+```sh
+tar xzf amoxtli-1.0.0-x86_64-linux.tar.gz
+cd amoxtli-1.0.0-x86_64-linux
+./install.sh            # or ./install.sh --default to make it your Markdown viewer
+```
+
+Or build it from source as described below.
+
 ## Requirements
 
 Ubuntu/Debian:
@@ -104,6 +118,7 @@ src/i18n.rs          gettext setup
 src/config.rs        constants and saved window state
 po/                  translations (.po) and template (.pot)
 tools/i18n.py        extract / merge / compile / check translations
+tools/package.sh     build the prebuilt release tarball into dist/
 data/                .desktop entry, AppStream metainfo, icons
 ```
 

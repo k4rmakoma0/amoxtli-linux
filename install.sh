@@ -27,7 +27,7 @@ command -v cargo >/dev/null || {
 
 echo "Building (release)…"
 cd "$SRC"
-AMOXTLI_LOCALEDIR="$LOCALEDIR" cargo build --release --quiet
+cargo build --release --quiet
 
 echo "Installing to $PREFIX"
 install -d "$BINDIR" "$DATADIR/applications" "$DATADIR/metainfo" \
