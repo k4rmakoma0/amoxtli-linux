@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 Alan Anaya Araujo -->
+<component type="desktop-application">
+  <id>dev.alananaya.Amoxtli</id>
+  <name>Amoxtli</name>
+  <summary>Read Markdown documents and notes</summary>
+  <developer id="dev.alananaya">
+    <name>Alan Anaya Araujo</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <description>
+    <p>
+      Amoxtli (“book” in Nahuatl) is a fast, native Markdown viewer. Documents are
+      rendered straight into native widgets instead of a web page, so they look
+      and feel like the rest of your desktop.
+    </p>
+    <ul>
+      <li>Table of contents that follows your reading position</li>
+      <li>Browse whole folders of notes</li>
+      <li>Live reload when the file changes</li>
+      <li>Tables, task lists, footnotes, alerts, images and syntax-highlighted code</li>
+      <li>Word count and reading time</li>
+      <li>Find in document, history between linked files and zoom</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">dev.alananaya.Amoxtli.desktop</launchable>
+  <provides>
+    <binary>amoxtli</binary>
+    <mediatype>text/markdown</mediatype>
+    <mediatype>text/x-markdown</mediatype>
+  </provides>
+  <translation type="gettext">amoxtli</translation>
+
+  <url type="homepage">https://github.com/k4rmakoma0/amoxtli-linux</url>
+  <url type="bugtracker">https://github.com/k4rmakoma0/amoxtli-linux/issues</url>
+  <url type="vcs-browser">https://github.com/k4rmakoma0/amoxtli-linux</url>
+  <url type="translate">https://github.com/k4rmakoma0/amoxtli-linux/tree/main/po</url>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#f3dcc8</color>
+    <color type="primary" scheme_preference="dark">#6b2a15</color>
+  </branding>
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+
+  <content_rating type="oars-1.1"/>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/v1.1.0/data/screenshots/light.png</image>
+      <caption>A document with its table of contents</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/v1.1.0/data/screenshots/dark.png</image>
+      <caption>Dark mode with alerts, code and tables</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/v1.1.0/data/screenshots/folder.png</image>
+      <caption>Browsing a folder of notes</caption>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="1.1.0" date="2026-11-02">
+      <description>
+        <p>Ready for Flathub.</p>
+        <ul>
+          <li>New application ID: dev.alananaya.Amoxtli</li>
+          <li>Works inside the Flatpak sandbox: opening other apps goes through the system app chooser</li>
+          <li>Runs on GNOME 49 and newer</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.1" date="2026-11-02">
+      <description>
+        <p>The header bar now fits narrow windows: the Open button becomes an icon, search moves to the main menu, and the document title is no longer cut off.</p>
+      </description>
+    </release>
+    <release version="1.0.0" date="2026-11-02">
+      <description>
+        <p>First release.</p>
+      </description>
+    </release>
+  </releases>
+</component>

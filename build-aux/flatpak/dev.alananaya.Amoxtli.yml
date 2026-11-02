@@ -1,0 +1,55 @@
+# Flatpak manifest for local builds from this checkout:
+#   flatpak-builder --user --install --force-clean build-dir build-aux/flatpak/dev.alananaya.Amoxtli.yml
+# The Flathub copy is identical except that the source is the git tag (see build-aux/flatpak/README.md).
+id: dev.alananaya.Amoxtli
+runtime: org.gnome.Platform
+runtime-version: '51'
+sdk: org.gnome.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: amoxtli
+
+finish-args:
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  # Documents embed remote images (badges, screenshots) by URL.
+  - --share=network
+  # A Markdown file references sibling files: relative images, links to other
+  # .md files, and the folder browser. Read-only access to home also gives real
+  # paths, so live reload (file monitoring) works for files opened from Files.
+  - --filesystem=home:ro
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+  env:
+    CARGO_HOME: /run/build/amoxtli/cargo
+    CARGO_NET_OFFLINE: 'true'
+
+modules:
+  - name: amoxtli
+    buildsystem: simple
+    build-commands:
+      - cargo --offline build --release --locked
+      - install -Dm755 target/release/amoxtli -t /app/bin/
+      - |
+        for po in po/*.po; do
+          lang=$(basename "$po" .po)
+          install -d "/app/share/locale/$lang/LC_MESSAGES"
+          msgfmt -o "/app/share/locale/$lang/LC_MESSAGES/amoxtli.mo" "$po"
+        done
+      - install -d /app/share/applications
+      - sed "s|@BINDIR@|/app/bin|g" data/${FLATPAK_ID}.desktop.in > /app/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm644 data/${FLATPAK_ID}.metainfo.xml -t /app/share/metainfo/
+      - install -Dm644 data/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg -t /app/share/icons/hicolor/scalable/apps/
+      - install -Dm644 data/icons/hicolor/symbolic/apps/${FLATPAK_ID}-symbolic.svg -t /app/share/icons/hicolor/symbolic/apps/
+    sources:
+      - type: dir
+        path: ../..
+        skip:
+          - target
+          - dist
+          - build-dir
+          - .flatpak-builder
+      - cargo-sources.json

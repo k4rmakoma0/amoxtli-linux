@@ -3,7 +3,7 @@
 set -eu
 ROOT="$(dirname "$(readlink -f "$0")")/.."
 cd "$ROOT"
-APP_ID=io.github.amoxtli.Amoxtli
+APP_ID=dev.alananaya.Amoxtli
 VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
 ARCH=$(uname -m)
 NAME="amoxtli-$VERSION-$ARCH-linux"
@@ -24,7 +24,7 @@ cat > "$STAGE/install.sh" <<'SH'
 #!/bin/sh
 # Install the prebuilt Amoxtli: ./install.sh [--default]   (PREFIX defaults to ~/.local)
 set -eu
-APP_ID=io.github.amoxtli.Amoxtli
+APP_ID=dev.alananaya.Amoxtli
 HERE="$(dirname "$(readlink -f "$0")")"
 PREFIX="${PREFIX:-$HOME/.local}"
 install -d "$PREFIX/bin" "$PREFIX/share/applications"

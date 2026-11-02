@@ -23,7 +23,7 @@ Comment[ja]=Markdown ドキュメントとノートのフォルダーを閲覧�
 Comment[ko]=Markdown 문서와 노트 폴더를 읽습니다
 Exec=@BINDIR@/amoxtli %U
 TryExec=@BINDIR@/amoxtli
-Icon=io.github.amoxtli.Amoxtli
+Icon=dev.alananaya.Amoxtli
 Terminal=false
 Categories=GNOME;GTK;Office;Viewer;
 Keywords=markdown;md;viewer;reader;readme;notes;documentation;
@@ -38,7 +38,7 @@ Keywords[ja]=markdown;md;ビューアー;リーダー;readme;ノート;ドキュ
 Keywords[ko]=markdown;md;뷰어;리더;readme;노트;문서;
 MimeType=text/markdown;text/x-markdown;
 StartupNotify=true
-StartupWMClass=io.github.amoxtli.Amoxtli
+StartupWMClass=dev.alananaya.Amoxtli
 Actions=new-window;
 
 [Desktop Action new-window]

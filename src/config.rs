@@ -3,10 +3,15 @@
 use gtk::glib;
 use std::path::PathBuf;
 
-pub const APP_ID: &str = "io.github.amoxtli.Amoxtli";
+pub const APP_ID: &str = "dev.alananaya.Amoxtli";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const MIME_TYPES: &[&str] = &["text/markdown", "text/x-markdown"];
 pub const GETTEXT_DOMAIN: &str = "amoxtli";
+
+/// Running inside a Flatpak sandbox.
+pub fn is_flatpak() -> bool {
+    std::path::Path::new("/.flatpak-info").exists()
+}
 
 /// The install prefix when running an installed binary (`<prefix>/bin/amoxtli`).
 fn install_prefix() -> Option<PathBuf> {

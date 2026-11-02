@@ -55,7 +55,7 @@ def greet(name: str) -> str:
 
 ### Image
 
-![Amoxtli icon](../data/icons/hicolor/scalable/apps/io.github.amoxtli.Amoxtli.svg)
+![Amoxtli icon](../data/icons/hicolor/scalable/apps/dev.alananaya.Amoxtli.svg)
 
 #### Level four
 ##### Level five

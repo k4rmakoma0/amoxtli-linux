@@ -5,7 +5,7 @@
 #   sudo PREFIX=/usr/local ./install.sh   (build first as your user: cargo build --release)
 set -eu
 
-APP_ID=io.github.amoxtli.Amoxtli
+APP_ID=dev.alananaya.Amoxtli
 SRC="$(dirname "$(readlink -f "$0")")"
 PREFIX="${PREFIX:-$HOME/.local}"
 BINDIR="$PREFIX/bin"
@@ -51,6 +51,11 @@ install -m 644 "data/icons/hicolor/symbolic/apps/$APP_ID-symbolic.svg" "$DATADIR
 
 # remove the old Python version if present
 rm -rf "$DATADIR/amoxtli"
+
+# files from the previous application ID (io.github.amoxtli.Amoxtli, before 1.1.0)
+OLD_ID=io.github.amoxtli.Amoxtli
+rm -f "$PREFIX/share/applications/$OLD_ID.desktop" "$PREFIX/share/metainfo/$OLD_ID.metainfo.xml" \
+  "$PREFIX/share/icons/hicolor/scalable/apps/$OLD_ID.svg" "$PREFIX/share/icons/hicolor/symbolic/apps/$OLD_ID-symbolic.svg"
 
 command -v update-desktop-database >/dev/null && update-desktop-database -q "$DATADIR/applications" || true
 command -v gtk4-update-icon-cache >/dev/null && gtk4-update-icon-cache -q -t -f "$DATADIR/icons/hicolor" 2>/dev/null || true

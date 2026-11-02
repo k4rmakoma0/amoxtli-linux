@@ -1,3 +1,6 @@
 target/
 __pycache__/
 dist/
+build-dir/
+repo/
+.flatpak-builder/

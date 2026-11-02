@@ -42,15 +42,16 @@ Pango-shaped text in a `GtkTextView`, tables as `GtkGrid`s, images as GPU textur
 
 Grab the prebuilt x86_64 binary from the
 [latest release](https://github.com/k4rmakoma0/amoxtli-linux/releases/latest)
-(needs GTK ≥ 4.22 and libadwaita ≥ 1.8, i.e. GNOME 49+ such as Ubuntu 26.04/26.10):
+(needs GTK ≥ 4.20 and libadwaita ≥ 1.8, i.e. GNOME 49+ such as Ubuntu 26.04/26.10):
 
 ```sh
-tar xzf amoxtli-1.0.1-x86_64-linux.tar.gz
-cd amoxtli-1.0.1-x86_64-linux
+tar xzf amoxtli-1.1.0-x86_64-linux.tar.gz
+cd amoxtli-1.1.0-x86_64-linux
 ./install.sh            # or ./install.sh --default to make it your Markdown viewer
 ```
 
-Or build it from source as described below.
+Or build it from source as described below. A Flatpak manifest lives in
+[`build-aux/flatpak`](build-aux/flatpak/README.md).
 
 ## Requirements
 
@@ -62,7 +63,7 @@ sudo apt install rustc cargo build-essential pkg-config libgtk-4-dev libadwaita-
 
 Fedora: `sudo dnf install rust cargo gtk4-devel libadwaita-devel`
 
-GTK ≥ 4.22 and libadwaita ≥ 1.8 are required (GNOME 49+).
+GTK ≥ 4.20 and libadwaita ≥ 1.8 are required (GNOME 49+).
 
 ## Run from source
 
@@ -85,7 +86,7 @@ You can also make it the default later from the app menu (**Set as Default Markd
 from GNOME Settings → Apps → Default Apps, or with:
 
 ```sh
-xdg-mime default io.github.amoxtli.Amoxtli.desktop text/markdown text/x-markdown
+xdg-mime default dev.alananaya.Amoxtli.desktop text/markdown text/x-markdown
 ```
 
 ## Translations
@@ -103,7 +104,7 @@ python3 tools/i18n.py compile   # build target/locale/*/LC_MESSAGES/amoxtli.mo
 To add a language, copy `po/amoxtli.pot` to `po/<lang>.po`, set the `Language` and
 `Plural-Forms` headers, translate, then run `compile`. Try it with e.g.
 `LANGUAGE=es cargo run`. The launcher's name/description translations are in
-`data/io.github.amoxtli.Amoxtli.desktop.in`.
+`data/dev.alananaya.Amoxtli.desktop.in`.
 
 ## Layout
 
@@ -119,6 +120,8 @@ src/config.rs        constants and saved window state
 po/                  translations (.po) and template (.pot)
 tools/i18n.py        extract / merge / compile / check translations
 tools/package.sh     build the prebuilt release tarball into dist/
+tools/flatpak-cargo-sources.py  offline crate sources for the Flatpak build
+build-aux/flatpak/   Flatpak manifest and Flathub submission notes
 data/                .desktop entry, AppStream metainfo, icons
 ```
 
