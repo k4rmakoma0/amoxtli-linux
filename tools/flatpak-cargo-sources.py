@@ -5,7 +5,7 @@
 
 Produces the same layout as flatpak-builder-tools' flatpak-cargo-generator:
 every crates.io package is downloaded into cargo/vendor/<name>-<version>
-with its .cargo-checksum.json, and cargo/config points cargo at it.
+with its .cargo-checksum.json, and cargo/config.toml points cargo at it.
 Run it again whenever Cargo.lock changes.
 """
 
@@ -55,7 +55,7 @@ def main() -> int:
         "contents": f'[source.vendored-sources]\ndirectory = "{VENDOR}"\n\n'
                     '[source.crates-io]\nreplace-with = "vendored-sources"\n',
         "dest": "cargo",
-        "dest-filename": "config",
+        "dest-filename": "config.toml",
     })
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(sources, indent=4) + "\n")

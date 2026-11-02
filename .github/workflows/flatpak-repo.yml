@@ -1,0 +1,81 @@
+# Builds the Flatpak and publishes a signed repository to GitHub Pages:
+#   https://k4rmakoma0.github.io/amoxtli-linux/amoxtli.flatpakref
+#
+# Runs on every version tag (v*) and can be started by hand from the Actions tab.
+# Needs the repository secret FLATPAK_GPG_PRIVATE_KEY (ASCII-armored, no passphrase)
+# and Pages set to "GitHub Actions" as its source.
+name: Flatpak repository
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: flatpak-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Allow bubblewrap (unprivileged user namespaces)
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Install Flatpak tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Cache GNOME SDK
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/share/flatpak
+          key: flatpak-sdk-gnome-51
+
+      - name: Cache build
+        uses: actions/cache@v6
+        with:
+          path: .flatpak-builder
+          key: flatpak-builder-${{ hashFiles('Cargo.lock', 'build-aux/flatpak/*.yml') }}
+          restore-keys: flatpak-builder-
+
+      - name: Import signing key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.FLATPAK_GPG_PRIVATE_KEY }}
+        run: |
+          if [ -z "$GPG_PRIVATE_KEY" ]; then
+            echo "::error::The FLATPAK_GPG_PRIVATE_KEY secret is not set"
+            exit 1
+          fi
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "KEY_ID=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr/{print $10; exit}')" >> "$GITHUB_ENV"
+
+      - name: Build and sign the repository
+        run: |
+          build-aux/flatpak/publish-repo.sh "$KEY_ID" public \
+            "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}amoxtli.flatpakref
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

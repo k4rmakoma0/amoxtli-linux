@@ -37,6 +37,33 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 Builder sandbox. If you change the compose options, delete `.flatpak-builder/` first:
 its cache doesn't track them.
 
+## Flatpak repository (GitHub Pages)
+
+`.github/workflows/flatpak-repo.yml` builds the app on every `v*` tag (or by hand from
+the Actions tab), signs it, and publishes a Flatpak repository to
+<https://k4rmakoma0.github.io/amoxtli-linux/> using `publish-repo.sh`. Users install
+it with the `.flatpakref` there and receive updates automatically.
+
+One-time setup:
+
+1. **Pages source**: Settings → Pages → Source: *GitHub Actions*.
+2. **Signing key** (keep a backup: if it's lost, users have to re-add the remote):
+
+   ```sh
+   gpg --batch --passphrase '' --quick-gen-key \
+     "Amoxtli Flatpak repository <hello@alananaya.dev>" rsa4096 sign never
+   KEY=$(gpg --list-secret-keys --with-colons "Amoxtli Flatpak repository" | awk -F: '/^fpr/{print $10; exit}')
+   gpg --armor --export-secret-keys "$KEY" | gh secret set FLATPAK_GPG_PRIVATE_KEY
+   ```
+
+To test the same build locally (with any key from your keyring):
+
+```sh
+build-aux/flatpak/publish-repo.sh <key-id> public http://127.0.0.1:8000
+(cd public && python3 -m http.server 8000) &
+flatpak install --user http://127.0.0.1:8000/amoxtli.flatpakref
+```
+
 ## Single-file bundle (GitHub releases)
 
 Bundles can't carry the separate `.Locale` extension, so build them with

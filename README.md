@@ -40,14 +40,19 @@ Pango-shaped text in a `GtkTextView`, tables as `GtkGrid`s, images as GPU textur
 
 ## Download
 
-From the [latest release](https://github.com/k4rmakoma0/amoxtli-linux/releases/latest):
-
-**Flatpak** (any distribution; the GNOME runtime is fetched from Flathub on install):
+**Flatpak repository (recommended, with automatic updates):** open
+<https://k4rmakoma0.github.io/amoxtli-linux/> and click **Install**, or run:
 
 ```sh
-flatpak install --user amoxtli-1.1.0-x86_64.flatpak
-flatpak run dev.alananaya.Amoxtli
+flatpak install --user https://k4rmakoma0.github.io/amoxtli-linux/amoxtli.flatpakref
 ```
+
+Updates then arrive through GNOME Software or `flatpak update`. The GNOME runtime is
+downloaded from Flathub.
+
+From the [latest release](https://github.com/k4rmakoma0/amoxtli-linux/releases/latest)
+you can also get a single-file Flatpak bundle (no automatic updates):
+`flatpak install --user amoxtli-<version>-x86_64.flatpak`.
 
 **Prebuilt binary** (needs GTK ≥ 4.20 and libadwaita ≥ 1.8, i.e. GNOME 49+):
 
