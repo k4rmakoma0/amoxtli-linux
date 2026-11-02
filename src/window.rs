@@ -129,6 +129,16 @@ impl Window {
             .dropdown_tooltip(tr("More Open Options"))
             .build();
         header.pack_start(&open_btn);
+        // narrow windows: same button with an icon instead of the label (swapped by the breakpoint)
+        let open_icon_btn = adw::SplitButton::builder()
+            .icon_name("document-open-symbolic")
+            .action_name("win.open")
+            .menu_model(&open_menu)
+            .tooltip_text(format!("{} (Ctrl+O)", tr("Open File")))
+            .dropdown_tooltip(tr("More Open Options"))
+            .visible(false)
+            .build();
+        header.pack_start(&open_icon_btn);
         let title = adw::WindowTitle::new("Amoxtli", "");
         header.set_title_widget(Some(&title));
         header.pack_end(&gtk::MenuButton::builder()
@@ -232,6 +242,9 @@ impl Window {
         window.set_content(Some(&split));
         let bp = adw::Breakpoint::new(adw::BreakpointCondition::parse("max-width: 680sp").unwrap());
         bp.add_setter(&split, "collapsed", Some(&true.to_value()));
+        bp.add_setter(&open_btn, "visible", Some(&false.to_value()));
+        bp.add_setter(&open_icon_btn, "visible", Some(&true.to_value()));
+        bp.add_setter(&search_button, "visible", Some(&false.to_value())); // still in the menu, Ctrl+F, or just type
         window.add_breakpoint(bp);
 
         let this = Rc::new(Self {
@@ -1030,7 +1043,7 @@ fn main_menu() -> gio::Menu {
         }
         menu.append_section(None, &s);
     };
-    section(&[(tr("New Window"), "app.new-window"), (tr("Reload"), "win.reload")]);
+    section(&[(tr("New Window"), "app.new-window"), (tr("Find"), "win.find"), (tr("Reload"), "win.reload")]);
     section(&[(tr("Zoom In"), "win.zoom-in"), (tr("Zoom Out"), "win.zoom-out"), (tr("Reset Zoom"), "win.zoom-reset")]);
     section(&[
         (tr("Edit in Text Editor"), "win.edit"),
