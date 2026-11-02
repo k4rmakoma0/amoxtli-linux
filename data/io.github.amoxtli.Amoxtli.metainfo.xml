@@ -34,4 +34,16 @@
   <launchable type="desktop-id">io.github.amoxtli.Amoxtli.desktop</launchable>
   <provides><mediatype>text/markdown</mediatype></provides>
   <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="1.0.1" date="2026-11-02">
+      <description>
+        <p>The header bar now fits narrow windows: the Open button becomes an icon, search moves to the main menu, and the document title is no longer cut off.</p>
+      </description>
+    </release>
+    <release version="1.0.0" date="2026-11-02">
+      <description>
+        <p>First release.</p>
+      </description>
+    </release>
+  </releases>
 </component>

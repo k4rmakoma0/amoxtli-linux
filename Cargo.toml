@@ -1,6 +1,6 @@
 [package]
 name = "amoxtli"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "A native Markdown viewer for GNOME and Linux"
 license = "MIT"

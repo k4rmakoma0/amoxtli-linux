@@ -45,8 +45,8 @@ Grab the prebuilt x86_64 binary from the
 (needs GTK ≥ 4.22 and libadwaita ≥ 1.8, i.e. GNOME 49+ such as Ubuntu 26.04/26.10):
 
 ```sh
-tar xzf amoxtli-1.0.0-x86_64-linux.tar.gz
-cd amoxtli-1.0.0-x86_64-linux
+tar xzf amoxtli-1.0.1-x86_64-linux.tar.gz
+cd amoxtli-1.0.1-x86_64-linux
 ./install.sh            # or ./install.sh --default to make it your Markdown viewer
 ```
 
