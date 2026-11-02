@@ -1,0 +1,322 @@
+# German translation for Amoxtli.
+msgid ""
+msgstr ""
+"Project-Id-Version: amoxtli\n"
+"Language: de\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/application.rs:127
+msgid "Install Amoxtli first (run ./install.sh)"
+msgstr "Installieren Sie zuerst Amoxtli (./install.sh ausführen)"
+
+#: src/application.rs:143
+msgid "Amoxtli is now the default Markdown viewer"
+msgstr "Amoxtli ist jetzt der Standard-Markdown-Betrachter"
+
+#: src/application.rs:151
+msgid "Amoxtli Contributors"
+msgstr "Amoxtli-Mitwirkende"
+
+#: src/application.rs:153
+msgid "A native Markdown viewer for GNOME and Linux."
+msgstr "Ein nativer Markdown-Betrachter für GNOME und Linux."
+
+#: src/application.rs:153
+msgid "Amoxtli means “book” in Nahuatl."
+msgstr "Amoxtli bedeutet „Buch“ auf Nahuatl."
+
+#: src/application.rs:156
+msgid "translator-credits"
+msgstr ""
+
+#: src/application.rs:166
+msgid "General"
+msgstr "Allgemein"
+
+#: src/application.rs:167 src/window.rs:128
+msgid "Open File"
+msgstr "Datei öffnen"
+
+#: src/application.rs:168 src/window.rs:474
+msgid "Open Folder"
+msgstr "Ordner öffnen"
+
+#: src/application.rs:169 src/window.rs:1014
+msgid "New Window"
+msgstr "Neues Fenster"
+
+#: src/application.rs:170
+msgid "Close Window"
+msgstr "Fenster schließen"
+
+#: src/application.rs:171
+msgid "Quit"
+msgstr "Beenden"
+
+#: src/application.rs:172 src/window.rs:1023
+msgid "Keyboard Shortcuts"
+msgstr "Tastenkürzel"
+
+#: src/application.rs:174
+msgid "Document"
+msgstr "Dokument"
+
+#: src/application.rs:175 src/window.rs:142
+msgid "Find"
+msgstr "Suchen"
+
+#: src/application.rs:176 src/window.rs:1014
+msgid "Reload"
+msgstr "Neu laden"
+
+#: src/application.rs:177 src/window.rs:1017
+msgid "Edit in Text Editor"
+msgstr "Im Texteditor bearbeiten"
+
+#: src/application.rs:178 src/window.rs:1019
+msgid "Copy File Path"
+msgstr "Dateipfad kopieren"
+
+#: src/application.rs:179 src/window.rs:118
+msgid "Back"
+msgstr "Zurück"
+
+#: src/application.rs:180 src/window.rs:120
+msgid "Forward"
+msgstr "Vorwärts"
+
+#: src/application.rs:181
+msgid "Scroll to Top"
+msgstr "Zum Anfang"
+
+#: src/application.rs:183
+msgid "View"
+msgstr "Ansicht"
+
+#: src/application.rs:184 src/window.rs:113
+msgid "Toggle Sidebar"
+msgstr "Seitenleiste umschalten"
+
+#: src/application.rs:185
+msgid "Show Contents"
+msgstr "Inhalt anzeigen"
+
+#: src/application.rs:186
+msgid "Show Files"
+msgstr "Dateien anzeigen"
+
+#: src/application.rs:187 src/window.rs:1015
+msgid "Zoom In"
+msgstr "Vergrößern"
+
+#: src/application.rs:188 src/window.rs:1015
+msgid "Zoom Out"
+msgstr "Verkleinern"
+
+#: src/application.rs:189 src/window.rs:1015
+msgid "Reset Zoom"
+msgstr "Zoom zurücksetzen"
+
+#: src/document.rs:364
+msgid "Note"
+msgstr "Hinweis"
+
+#: src/document.rs:365
+msgid "Tip"
+msgstr "Tipp"
+
+#: src/document.rs:366
+msgid "Important"
+msgstr "Wichtig"
+
+#: src/document.rs:367
+msgid "Warning"
+msgstr "Warnung"
+
+#: src/document.rs:368
+msgid "Caution"
+msgstr "Vorsicht"
+
+#: src/sidebar.rs:42
+msgid "No Headings"
+msgstr "Keine Überschriften"
+
+#: src/sidebar.rs:43
+msgid "This document has no table of contents"
+msgstr "Dieses Dokument hat kein Inhaltsverzeichnis"
+
+#: src/sidebar.rs:191 src/window.rs:123 src/window.rs:178
+msgid "Open Folder…"
+msgstr "Ordner öffnen …"
+
+#: src/sidebar.rs:198
+msgid "No Folder"
+msgstr "Kein Ordner"
+
+#: src/sidebar.rs:199
+msgid "Open a folder to browse its Markdown files"
+msgstr "Öffnen Sie einen Ordner, um seine Markdown-Dateien zu durchsuchen"
+
+#: src/window.rs:102
+msgid "Contents"
+msgstr "Inhalt"
+
+#: src/window.rs:102
+msgid "Table of Contents"
+msgstr "Inhaltsverzeichnis"
+
+#: src/window.rs:103
+msgid "Files"
+msgstr "Dateien"
+
+#: src/window.rs:103
+msgid "Folder"
+msgstr "Ordner"
+
+#: src/window.rs:125
+msgid "Open"
+msgstr "Öffnen"
+
+#: src/window.rs:129
+msgid "More Open Options"
+msgstr "Weitere Öffnen-Optionen"
+
+#: src/window.rs:138
+msgid "Main Menu"
+msgstr "Hauptmenü"
+
+#: src/window.rs:147
+msgid "Find in document"
+msgstr "Im Dokument suchen"
+
+#: src/window.rs:150
+msgid "Previous Match"
+msgstr "Vorheriger Treffer"
+
+#: src/window.rs:152
+msgid "Next Match"
+msgstr "Nächster Treffer"
+
+#: src/window.rs:173
+msgid "Open a Markdown file or a folder of notes."
+msgstr "Öffnen Sie eine Markdown-Datei oder einen Notizordner."
+
+#: src/window.rs:173
+msgid "You can also drop files here."
+msgstr "Sie können Dateien auch hierher ziehen."
+
+#: src/window.rs:176
+msgid "Open File…"
+msgstr "Datei öffnen …"
+
+#: src/window.rs:183
+msgid "Choose a Document"
+msgstr "Dokument auswählen"
+
+#: src/window.rs:184
+msgid "Select a Markdown file from the sidebar"
+msgstr "Wählen Sie eine Markdown-Datei in der Seitenleiste"
+
+#: src/window.rs:186
+msgid "Unable to Open File"
+msgstr "Datei kann nicht geöffnet werden"
+
+#: src/window.rs:194
+msgid "Amoxtli is not your default Markdown viewer"
+msgstr "Amoxtli ist nicht Ihr Standard-Markdown-Betrachter"
+
+#: src/window.rs:195
+msgid "Make Default"
+msgstr "Als Standard festlegen"
+
+#: src/window.rs:438
+msgid "Markdown Documents"
+msgstr "Markdown-Dokumente"
+
+#: src/window.rs:446
+msgid "Text Files"
+msgstr "Textdateien"
+
+#: src/window.rs:449
+msgid "All Files"
+msgstr "Alle Dateien"
+
+#: src/window.rs:456
+msgid "Open Markdown File"
+msgstr "Markdown-Datei öffnen"
+
+#: src/window.rs:711
+#, python-brace-format
+msgid "File not found: {name}"
+msgstr "Datei nicht gefunden: {name}"
+
+#: src/window.rs:798
+msgid "No results"
+msgstr "Keine Ergebnisse"
+
+#: src/window.rs:832
+#, python-brace-format
+msgid "{current} of {total}"
+msgstr "{current} von {total}"
+
+#: src/window.rs:842
+msgid "less than 1 min read"
+msgstr "weniger als 1 Min. Lesezeit"
+
+#: src/window.rs:842
+msgid "0 min read"
+msgstr "0 Min. Lesezeit"
+
+#: src/window.rs:846
+#, python-brace-format
+msgid "{n} min read"
+msgid_plural "{n} min read"
+msgstr[0] "{n} Min. Lesezeit"
+msgstr[1] "{n} Min. Lesezeit"
+
+#: src/window.rs:850
+#, python-brace-format
+msgid "{hours} h {minutes} min read"
+msgstr "{hours} Std. {minutes} Min. Lesezeit"
+
+#: src/window.rs:852
+#, python-brace-format
+msgid "{hours} h read"
+msgstr "{hours} Std. Lesezeit"
+
+#: src/window.rs:877
+#, python-brace-format
+msgid "{selected} of {total} word"
+msgid_plural "{selected} of {total} words"
+msgstr[0] "{selected} von {total} Wort"
+msgstr[1] "{selected} von {total} Wörtern"
+
+#: src/window.rs:883
+#, python-brace-format
+msgid "{n} word"
+msgid_plural "{n} words"
+msgstr[0] "{n} Wort"
+msgstr[1] "{n} Wörter"
+
+#: src/window.rs:901
+#, python-brace-format
+msgid "Zoom {percent}%"
+msgstr "Zoom {percent} %"
+
+#: src/window.rs:975
+msgid "Path copied"
+msgstr "Pfad kopiert"
+
+#: src/window.rs:1018
+msgid "Show in Files"
+msgstr "In Dateien anzeigen"
+
+#: src/window.rs:1022
+msgid "Set as Default Markdown Viewer"
+msgstr "Als Standard-Markdown-Betrachter festlegen"
+
+#: src/window.rs:1024
+msgid "About Amoxtli"
+msgstr "Info zu Amoxtli"

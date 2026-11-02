@@ -1,0 +1,319 @@
+# Chinese (Simplified) translation for Amoxtli.
+msgid ""
+msgstr ""
+"Project-Id-Version: amoxtli\n"
+"Language: zh_CN\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: src/application.rs:127
+msgid "Install Amoxtli first (run ./install.sh)"
+msgstr "请先安装 Amoxtli（运行 ./install.sh）"
+
+#: src/application.rs:143
+msgid "Amoxtli is now the default Markdown viewer"
+msgstr "Amoxtli 现在是默认的 Markdown 查看器"
+
+#: src/application.rs:151
+msgid "Amoxtli Contributors"
+msgstr "Amoxtli 贡献者"
+
+#: src/application.rs:153
+msgid "A native Markdown viewer for GNOME and Linux."
+msgstr "适用于 GNOME 和 Linux 的原生 Markdown 查看器。"
+
+#: src/application.rs:153
+msgid "Amoxtli means “book” in Nahuatl."
+msgstr "Amoxtli 在纳瓦特尔语中意为“书”。"
+
+#: src/application.rs:156
+msgid "translator-credits"
+msgstr ""
+
+#: src/application.rs:166
+msgid "General"
+msgstr "常规"
+
+#: src/application.rs:167 src/window.rs:128
+msgid "Open File"
+msgstr "打开文件"
+
+#: src/application.rs:168 src/window.rs:474
+msgid "Open Folder"
+msgstr "打开文件夹"
+
+#: src/application.rs:169 src/window.rs:1014
+msgid "New Window"
+msgstr "新建窗口"
+
+#: src/application.rs:170
+msgid "Close Window"
+msgstr "关闭窗口"
+
+#: src/application.rs:171
+msgid "Quit"
+msgstr "退出"
+
+#: src/application.rs:172 src/window.rs:1023
+msgid "Keyboard Shortcuts"
+msgstr "键盘快捷键"
+
+#: src/application.rs:174
+msgid "Document"
+msgstr "文档"
+
+#: src/application.rs:175 src/window.rs:142
+msgid "Find"
+msgstr "查找"
+
+#: src/application.rs:176 src/window.rs:1014
+msgid "Reload"
+msgstr "重新加载"
+
+#: src/application.rs:177 src/window.rs:1017
+msgid "Edit in Text Editor"
+msgstr "在文本编辑器中编辑"
+
+#: src/application.rs:178 src/window.rs:1019
+msgid "Copy File Path"
+msgstr "复制文件路径"
+
+#: src/application.rs:179 src/window.rs:118
+msgid "Back"
+msgstr "后退"
+
+#: src/application.rs:180 src/window.rs:120
+msgid "Forward"
+msgstr "前进"
+
+#: src/application.rs:181
+msgid "Scroll to Top"
+msgstr "滚动到顶部"
+
+#: src/application.rs:183
+msgid "View"
+msgstr "视图"
+
+#: src/application.rs:184 src/window.rs:113
+msgid "Toggle Sidebar"
+msgstr "切换侧边栏"
+
+#: src/application.rs:185
+msgid "Show Contents"
+msgstr "显示目录"
+
+#: src/application.rs:186
+msgid "Show Files"
+msgstr "显示文件"
+
+#: src/application.rs:187 src/window.rs:1015
+msgid "Zoom In"
+msgstr "放大"
+
+#: src/application.rs:188 src/window.rs:1015
+msgid "Zoom Out"
+msgstr "缩小"
+
+#: src/application.rs:189 src/window.rs:1015
+msgid "Reset Zoom"
+msgstr "重置缩放"
+
+#: src/document.rs:364
+msgid "Note"
+msgstr "注意"
+
+#: src/document.rs:365
+msgid "Tip"
+msgstr "提示"
+
+#: src/document.rs:366
+msgid "Important"
+msgstr "重要"
+
+#: src/document.rs:367
+msgid "Warning"
+msgstr "警告"
+
+#: src/document.rs:368
+msgid "Caution"
+msgstr "小心"
+
+#: src/sidebar.rs:42
+msgid "No Headings"
+msgstr "没有标题"
+
+#: src/sidebar.rs:43
+msgid "This document has no table of contents"
+msgstr "此文档没有目录"
+
+#: src/sidebar.rs:191 src/window.rs:123 src/window.rs:178
+msgid "Open Folder…"
+msgstr "打开文件夹…"
+
+#: src/sidebar.rs:198
+msgid "No Folder"
+msgstr "没有文件夹"
+
+#: src/sidebar.rs:199
+msgid "Open a folder to browse its Markdown files"
+msgstr "打开文件夹以浏览其中的 Markdown 文件"
+
+#: src/window.rs:102
+msgid "Contents"
+msgstr "目录"
+
+#: src/window.rs:102
+msgid "Table of Contents"
+msgstr "目录"
+
+#: src/window.rs:103
+msgid "Files"
+msgstr "文件"
+
+#: src/window.rs:103
+msgid "Folder"
+msgstr "文件夹"
+
+#: src/window.rs:125
+msgid "Open"
+msgstr "打开"
+
+#: src/window.rs:129
+msgid "More Open Options"
+msgstr "更多打开选项"
+
+#: src/window.rs:138
+msgid "Main Menu"
+msgstr "主菜单"
+
+#: src/window.rs:147
+msgid "Find in document"
+msgstr "在文档中查找"
+
+#: src/window.rs:150
+msgid "Previous Match"
+msgstr "上一个匹配"
+
+#: src/window.rs:152
+msgid "Next Match"
+msgstr "下一个匹配"
+
+#: src/window.rs:173
+msgid "Open a Markdown file or a folder of notes."
+msgstr "打开一个 Markdown 文件或笔记文件夹。"
+
+#: src/window.rs:173
+msgid "You can also drop files here."
+msgstr "也可以将文件拖放到这里。"
+
+#: src/window.rs:176
+msgid "Open File…"
+msgstr "打开文件…"
+
+#: src/window.rs:183
+msgid "Choose a Document"
+msgstr "选择文档"
+
+#: src/window.rs:184
+msgid "Select a Markdown file from the sidebar"
+msgstr "从侧边栏选择一个 Markdown 文件"
+
+#: src/window.rs:186
+msgid "Unable to Open File"
+msgstr "无法打开文件"
+
+#: src/window.rs:194
+msgid "Amoxtli is not your default Markdown viewer"
+msgstr "Amoxtli 不是您的默认 Markdown 查看器"
+
+#: src/window.rs:195
+msgid "Make Default"
+msgstr "设为默认"
+
+#: src/window.rs:438
+msgid "Markdown Documents"
+msgstr "Markdown 文档"
+
+#: src/window.rs:446
+msgid "Text Files"
+msgstr "文本文件"
+
+#: src/window.rs:449
+msgid "All Files"
+msgstr "所有文件"
+
+#: src/window.rs:456
+msgid "Open Markdown File"
+msgstr "打开 Markdown 文件"
+
+#: src/window.rs:711
+#, python-brace-format
+msgid "File not found: {name}"
+msgstr "未找到文件：{name}"
+
+#: src/window.rs:798
+msgid "No results"
+msgstr "无结果"
+
+#: src/window.rs:832
+#, python-brace-format
+msgid "{current} of {total}"
+msgstr "第 {current} 个，共 {total} 个"
+
+#: src/window.rs:842
+msgid "less than 1 min read"
+msgstr "阅读时间不到 1 分钟"
+
+#: src/window.rs:842
+msgid "0 min read"
+msgstr "阅读时间 0 分钟"
+
+#: src/window.rs:846
+#, python-brace-format
+msgid "{n} min read"
+msgid_plural "{n} min read"
+msgstr[0] "阅读时间 {n} 分钟"
+
+#: src/window.rs:850
+#, python-brace-format
+msgid "{hours} h {minutes} min read"
+msgstr "阅读时间 {hours} 小时 {minutes} 分钟"
+
+#: src/window.rs:852
+#, python-brace-format
+msgid "{hours} h read"
+msgstr "阅读时间 {hours} 小时"
+
+#: src/window.rs:877
+#, python-brace-format
+msgid "{selected} of {total} word"
+msgid_plural "{selected} of {total} words"
+msgstr[0] "{selected} / {total} 字"
+
+#: src/window.rs:883
+#, python-brace-format
+msgid "{n} word"
+msgid_plural "{n} words"
+msgstr[0] "{n} 字"
+
+#: src/window.rs:901
+#, python-brace-format
+msgid "Zoom {percent}%"
+msgstr "缩放 {percent}%"
+
+#: src/window.rs:975
+msgid "Path copied"
+msgstr "路径已复制"
+
+#: src/window.rs:1018
+msgid "Show in Files"
+msgstr "在文件中显示"
+
+#: src/window.rs:1022
+msgid "Set as Default Markdown Viewer"
+msgstr "设为默认 Markdown 查看器"
+
+#: src/window.rs:1024
+msgid "About Amoxtli"
+msgstr "关于 Amoxtli"

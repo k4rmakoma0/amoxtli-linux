@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.amoxtli.Amoxtli</id>
+  <name>Amoxtli</name>
+  <summary>Read Markdown documents natively</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>Amoxtli (“book” in Nahuatl) is a fast, native Markdown viewer built with GTK 4 and libadwaita.</p>
+    <ul>
+      <li>Native rendering — no embedded browser</li>
+      <li>Table of contents sidebar with scroll tracking</li>
+      <li>Browse whole folders of notes</li>
+      <li>Live reload when the file changes</li>
+      <li>Tables, task lists, images and syntax-highlighted code</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">io.github.amoxtli.Amoxtli.desktop</launchable>
+  <provides><mediatype>text/markdown</mediatype></provides>
+  <content_rating type="oars-1.1"/>
+</component>

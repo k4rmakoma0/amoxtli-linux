@@ -1,0 +1,319 @@
+# Japanese translation for Amoxtli.
+msgid ""
+msgstr ""
+"Project-Id-Version: amoxtli\n"
+"Language: ja\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: src/application.rs:127
+msgid "Install Amoxtli first (run ./install.sh)"
+msgstr "先に Amoxtli をインストールしてください（./install.sh を実行）"
+
+#: src/application.rs:143
+msgid "Amoxtli is now the default Markdown viewer"
+msgstr "Amoxtli が既定の Markdown ビューアーになりました"
+
+#: src/application.rs:151
+msgid "Amoxtli Contributors"
+msgstr "Amoxtli の貢献者"
+
+#: src/application.rs:153
+msgid "A native Markdown viewer for GNOME and Linux."
+msgstr "GNOME と Linux 向けのネイティブ Markdown ビューアー。"
+
+#: src/application.rs:153
+msgid "Amoxtli means “book” in Nahuatl."
+msgstr "Amoxtli はナワトル語で「本」という意味です。"
+
+#: src/application.rs:156
+msgid "translator-credits"
+msgstr ""
+
+#: src/application.rs:166
+msgid "General"
+msgstr "全般"
+
+#: src/application.rs:167 src/window.rs:128
+msgid "Open File"
+msgstr "ファイルを開く"
+
+#: src/application.rs:168 src/window.rs:474
+msgid "Open Folder"
+msgstr "フォルダーを開く"
+
+#: src/application.rs:169 src/window.rs:1014
+msgid "New Window"
+msgstr "新しいウィンドウ"
+
+#: src/application.rs:170
+msgid "Close Window"
+msgstr "ウィンドウを閉じる"
+
+#: src/application.rs:171
+msgid "Quit"
+msgstr "終了"
+
+#: src/application.rs:172 src/window.rs:1023
+msgid "Keyboard Shortcuts"
+msgstr "キーボードショートカット"
+
+#: src/application.rs:174
+msgid "Document"
+msgstr "ドキュメント"
+
+#: src/application.rs:175 src/window.rs:142
+msgid "Find"
+msgstr "検索"
+
+#: src/application.rs:176 src/window.rs:1014
+msgid "Reload"
+msgstr "再読み込み"
+
+#: src/application.rs:177 src/window.rs:1017
+msgid "Edit in Text Editor"
+msgstr "テキストエディターで編集"
+
+#: src/application.rs:178 src/window.rs:1019
+msgid "Copy File Path"
+msgstr "ファイルのパスをコピー"
+
+#: src/application.rs:179 src/window.rs:118
+msgid "Back"
+msgstr "戻る"
+
+#: src/application.rs:180 src/window.rs:120
+msgid "Forward"
+msgstr "進む"
+
+#: src/application.rs:181
+msgid "Scroll to Top"
+msgstr "先頭へスクロール"
+
+#: src/application.rs:183
+msgid "View"
+msgstr "表示"
+
+#: src/application.rs:184 src/window.rs:113
+msgid "Toggle Sidebar"
+msgstr "サイドバーの切り替え"
+
+#: src/application.rs:185
+msgid "Show Contents"
+msgstr "目次を表示"
+
+#: src/application.rs:186
+msgid "Show Files"
+msgstr "ファイルを表示"
+
+#: src/application.rs:187 src/window.rs:1015
+msgid "Zoom In"
+msgstr "拡大"
+
+#: src/application.rs:188 src/window.rs:1015
+msgid "Zoom Out"
+msgstr "縮小"
+
+#: src/application.rs:189 src/window.rs:1015
+msgid "Reset Zoom"
+msgstr "ズームをリセット"
+
+#: src/document.rs:364
+msgid "Note"
+msgstr "注記"
+
+#: src/document.rs:365
+msgid "Tip"
+msgstr "ヒント"
+
+#: src/document.rs:366
+msgid "Important"
+msgstr "重要"
+
+#: src/document.rs:367
+msgid "Warning"
+msgstr "警告"
+
+#: src/document.rs:368
+msgid "Caution"
+msgstr "注意"
+
+#: src/sidebar.rs:42
+msgid "No Headings"
+msgstr "見出しがありません"
+
+#: src/sidebar.rs:43
+msgid "This document has no table of contents"
+msgstr "このドキュメントには目次がありません"
+
+#: src/sidebar.rs:191 src/window.rs:123 src/window.rs:178
+msgid "Open Folder…"
+msgstr "フォルダーを開く…"
+
+#: src/sidebar.rs:198
+msgid "No Folder"
+msgstr "フォルダーがありません"
+
+#: src/sidebar.rs:199
+msgid "Open a folder to browse its Markdown files"
+msgstr "フォルダーを開いて Markdown ファイルを閲覧します"
+
+#: src/window.rs:102
+msgid "Contents"
+msgstr "目次"
+
+#: src/window.rs:102
+msgid "Table of Contents"
+msgstr "目次"
+
+#: src/window.rs:103
+msgid "Files"
+msgstr "ファイル"
+
+#: src/window.rs:103
+msgid "Folder"
+msgstr "フォルダー"
+
+#: src/window.rs:125
+msgid "Open"
+msgstr "開く"
+
+#: src/window.rs:129
+msgid "More Open Options"
+msgstr "その他の開くオプション"
+
+#: src/window.rs:138
+msgid "Main Menu"
+msgstr "メインメニュー"
+
+#: src/window.rs:147
+msgid "Find in document"
+msgstr "ドキュメント内を検索"
+
+#: src/window.rs:150
+msgid "Previous Match"
+msgstr "前の一致"
+
+#: src/window.rs:152
+msgid "Next Match"
+msgstr "次の一致"
+
+#: src/window.rs:173
+msgid "Open a Markdown file or a folder of notes."
+msgstr "Markdown ファイルまたはノートのフォルダーを開いてください。"
+
+#: src/window.rs:173
+msgid "You can also drop files here."
+msgstr "ここにファイルをドロップすることもできます。"
+
+#: src/window.rs:176
+msgid "Open File…"
+msgstr "ファイルを開く…"
+
+#: src/window.rs:183
+msgid "Choose a Document"
+msgstr "ドキュメントを選択"
+
+#: src/window.rs:184
+msgid "Select a Markdown file from the sidebar"
+msgstr "サイドバーから Markdown ファイルを選択してください"
+
+#: src/window.rs:186
+msgid "Unable to Open File"
+msgstr "ファイルを開けません"
+
+#: src/window.rs:194
+msgid "Amoxtli is not your default Markdown viewer"
+msgstr "Amoxtli は既定の Markdown ビューアーではありません"
+
+#: src/window.rs:195
+msgid "Make Default"
+msgstr "既定にする"
+
+#: src/window.rs:438
+msgid "Markdown Documents"
+msgstr "Markdown ドキュメント"
+
+#: src/window.rs:446
+msgid "Text Files"
+msgstr "テキストファイル"
+
+#: src/window.rs:449
+msgid "All Files"
+msgstr "すべてのファイル"
+
+#: src/window.rs:456
+msgid "Open Markdown File"
+msgstr "Markdown ファイルを開く"
+
+#: src/window.rs:711
+#, python-brace-format
+msgid "File not found: {name}"
+msgstr "ファイルが見つかりません: {name}"
+
+#: src/window.rs:798
+msgid "No results"
+msgstr "結果なし"
+
+#: src/window.rs:832
+#, python-brace-format
+msgid "{current} of {total}"
+msgstr "{current} / {total}"
+
+#: src/window.rs:842
+msgid "less than 1 min read"
+msgstr "1 分未満で読めます"
+
+#: src/window.rs:842
+msgid "0 min read"
+msgstr "0 分で読めます"
+
+#: src/window.rs:846
+#, python-brace-format
+msgid "{n} min read"
+msgid_plural "{n} min read"
+msgstr[0] "{n} 分で読めます"
+
+#: src/window.rs:850
+#, python-brace-format
+msgid "{hours} h {minutes} min read"
+msgstr "{hours} 時間 {minutes} 分で読めます"
+
+#: src/window.rs:852
+#, python-brace-format
+msgid "{hours} h read"
+msgstr "{hours} 時間で読めます"
+
+#: src/window.rs:877
+#, python-brace-format
+msgid "{selected} of {total} word"
+msgid_plural "{selected} of {total} words"
+msgstr[0] "{selected} / {total} 語"
+
+#: src/window.rs:883
+#, python-brace-format
+msgid "{n} word"
+msgid_plural "{n} words"
+msgstr[0] "{n} 語"
+
+#: src/window.rs:901
+#, python-brace-format
+msgid "Zoom {percent}%"
+msgstr "ズーム {percent}%"
+
+#: src/window.rs:975
+msgid "Path copied"
+msgstr "パスをコピーしました"
+
+#: src/window.rs:1018
+msgid "Show in Files"
+msgstr "ファイルで表示"
+
+#: src/window.rs:1022
+msgid "Set as Default Markdown Viewer"
+msgstr "既定の Markdown ビューアーに設定"
+
+#: src/window.rs:1024
+msgid "About Amoxtli"
+msgstr "Amoxtli について"
