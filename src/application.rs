@@ -1,11 +1,13 @@
 //! The Adw.Application: app-wide actions, shortcuts, styling and file opening.
 
-use crate::config::{self, APP_ID, MIME_TYPES, VERSION};
+use crate::config::{self, State, APP_ID, MIME_TYPES, VERSION};
+use crate::typography::{self, ReadingFont, TextSize};
 use crate::i18n::tr;
 use crate::editor::{self, EditorMode, Toggle};
 use crate::window::{mode_accel, Window};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
+use std::cell::Cell;
 use std::rc::Rc;
 
 const CSS: &str = r#"
@@ -19,6 +21,92 @@ const CSS: &str = r#"
 .md-striped { background: alpha(currentColor, 0.025); }
 .md-img-alt { font-size: 90%; }
 "#;
+
+thread_local! {
+    /// The typeface and size style sheet, shared by every window.
+    static TYPOGRAPHY: gtk::CssProvider = gtk::CssProvider::new();
+    static FONT: Cell<ReadingFont> = const { Cell::new(ReadingFont::System) };
+    static SIZE: Cell<TextSize> = const { Cell::new(TextSize::STANDARD) };
+    static FAMILIES: std::cell::OnceCell<Vec<String>> = const { std::cell::OnceCell::new() };
+}
+
+/// The font families installed, read once.
+pub fn installed_families() -> Vec<String> {
+    FAMILIES.with(|f| {
+        f.get_or_init(|| gtk::Label::new(None).pango_context().list_families().iter().map(|f| f.name().to_string()).collect())
+            .clone()
+    })
+}
+
+pub fn current_font() -> ReadingFont {
+    FONT.with(Cell::get)
+}
+
+pub fn current_size() -> TextSize {
+    SIZE.with(Cell::get)
+}
+
+fn apply_typography(font: ReadingFont, size: TextSize) {
+    FONT.with(|f| f.set(font));
+    SIZE.with(|s| s.set(size));
+    let family = font.family(&installed_families());
+    TYPOGRAPHY.with(|t| t.load_from_string(&typography::css(family.as_deref(), size)));
+}
+
+fn save_typography() {
+    let mut st = State::load();
+    st.font = current_font().name().into();
+    st.text_size = current_size();
+    st.save();
+}
+
+fn update_size_actions(app: &adw::Application) {
+    let size = current_size();
+    let set = |name: &str, on: bool| {
+        if let Some(a) = app.lookup_action(name).and_downcast::<gio::SimpleAction>() {
+            a.set_enabled(on);
+        }
+    };
+    set("text-larger", size.larger().is_some());
+    set("text-smaller", size.smaller().is_some());
+    set("text-reset", size != TextSize::STANDARD);
+}
+
+fn step_size(app: &adw::Application, step: fn(TextSize) -> Option<TextSize>) {
+    let Some(size) = step(current_size()) else { return };
+    apply_typography(current_font(), size);
+    save_typography();
+    update_size_actions(app);
+    if let Some(w) = active(app) {
+        w.toast(&crate::i18n::fill(&tr("Text size {percent}%"), &[("percent", &size.percent().to_string())]), 1);
+    }
+}
+
+/// The Aa menu: the typefaces, then the size steps. Rounded only shows when a rounded
+/// family is installed.
+pub fn typography_menu() -> gio::Menu {
+    let menu = gio::Menu::new();
+    menu.append_section(None, &font_menu());
+    menu.append_section(None, &size_menu());
+    menu
+}
+
+pub fn font_menu() -> gio::Menu {
+    let fonts = gio::Menu::new();
+    let rounded = typography::rounded_family(&installed_families()).is_some();
+    for font in ReadingFont::ALL.into_iter().filter(|f| *f != ReadingFont::Rounded || rounded) {
+        fonts.append(Some(&font.label()), Some(&format!("app.font::{}", font.name())));
+    }
+    fonts
+}
+
+pub fn size_menu() -> gio::Menu {
+    let sizes = gio::Menu::new();
+    sizes.append(Some(&tr("Larger Text")), Some("app.text-larger"));
+    sizes.append(Some(&tr("Smaller Text")), Some("app.text-smaller"));
+    sizes.append(Some(&tr("Normal Size")), Some("app.text-reset"));
+    sizes
+}
 
 pub fn run() -> glib::ExitCode {
     let app = adw::Application::builder()
@@ -65,12 +153,20 @@ fn startup(app: &adw::Application) {
     gtk::Window::set_default_icon_name(APP_ID);
     let display = gdk::Display::default().expect("no display");
     let provider = gtk::CssProvider::new();
-    let zoom_css: String = (50..=300)
-        .step_by(10)
-        .map(|z| format!(".md-document.zoom-{z} {{ font-size: {:.2}em; }}\n", z as f64 / 100.0))
-        .collect();
-    provider.load_from_string(&format!("{CSS}{zoom_css}"));
+    provider.load_from_string(CSS);
     gtk::style_context_add_provider_for_display(&display, &provider, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION);
+    TYPOGRAPHY.with(|t| gtk::style_context_add_provider_for_display(&display, t, gtk::STYLE_PROVIDER_PRIORITY_APPLICATION));
+    let st = State::load();
+    let font = ReadingFont::from_name(&st.font).filter(|f| f.family(&installed_families()).is_some() || *f == ReadingFont::System);
+    apply_typography(font.unwrap_or(ReadingFont::System), st.text_size);
+    let font_action = gio::SimpleAction::new_stateful("font", Some(glib::VariantTy::STRING), &current_font().name().to_variant());
+    font_action.connect_activate(|action, param| {
+        let Some(font) = param.and_then(|p| p.str()).and_then(ReadingFont::from_name) else { return };
+        action.set_state(&font.name().to_variant());
+        apply_typography(font, current_size());
+        save_typography();
+    });
+    app.add_action(&font_action);
     if let Some(dir) = config::dev_icon_dir() {
         gtk::IconTheme::for_display(&display).add_search_path(dir);
     }
@@ -97,6 +193,10 @@ fn startup(app: &adw::Application) {
     add("about", &[], about);
     add("shortcuts", &["<Ctrl>question"], shortcuts);
     add("make-default", &[], make_default);
+    add("text-larger", &["<Ctrl>plus", "<Ctrl>equal", "<Ctrl>KP_Add"], |app| step_size(app, TextSize::larger));
+    add("text-smaller", &["<Ctrl>minus", "<Ctrl>KP_Subtract"], |app| step_size(app, TextSize::smaller));
+    add("text-reset", &["<Ctrl>0", "<Ctrl>KP_0"], |app| step_size(app, |_| Some(TextSize::STANDARD)));
+    update_size_actions(app);
 
     let accels: &[(&str, &[&str])] = &[
         ("win.open", &["<Ctrl>o"]),
@@ -107,9 +207,6 @@ fn startup(app: &adw::Application) {
         // Ctrl+1…7 are the paragraph styles, as on macOS
         ("win.show-contents", &["<Ctrl><Alt>1"]),
         ("win.show-files", &["<Ctrl><Alt>2"]),
-        ("win.zoom-in", &["<Ctrl>plus", "<Ctrl>equal", "<Ctrl>KP_Add"]),
-        ("win.zoom-out", &["<Ctrl>minus", "<Ctrl>KP_Subtract"]),
-        ("win.zoom-reset", &["<Ctrl>0", "<Ctrl>KP_0"]),
         ("win.back", &["<Alt>Left", "Back"]),
         ("win.forward", &["<Alt>Right", "Forward"]),
         // Ctrl+E is inline code
@@ -205,9 +302,9 @@ fn shortcuts(app: &adw::Application) {
             (tr("Toggle Sidebar"), "F9"),
             (tr("Show Contents"), "<Ctrl><Alt>1"),
             (tr("Show Files"), "<Ctrl><Alt>2"),
-            (tr("Zoom In"), "<Ctrl>plus"),
-            (tr("Zoom Out"), "<Ctrl>minus"),
-            (tr("Reset Zoom"), "<Ctrl>0"),
+            (tr("Larger Text"), "<Ctrl>plus"),
+            (tr("Smaller Text"), "<Ctrl>minus"),
+            (tr("Normal Size"), "<Ctrl>0"),
         ]),
     ];
     let mut groups: Vec<(String, Vec<(String, String)>)> = fixed

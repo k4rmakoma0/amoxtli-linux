@@ -13,10 +13,6 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::time::Duration;
 
-const ZOOM_STEPS: [i32; 26] = [
-    50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250,
-    260, 270, 280, 290, 300,
-];
 const README_NAMES: &[&str] = &["README.md", "readme.md", "Readme.md", "README.markdown", "index.md", "INDEX.md"];
 const WORDS_PER_MINUTE: f64 = 220.0;
 
@@ -69,7 +65,6 @@ pub struct Window {
     folder: RefCell<Option<gio::File>>,
     history: RefCell<Vec<(gio::File, f64)>>,
     forward: RefCell<Vec<(gio::File, f64)>>,
-    zoom: Cell<i32>,
     monitor: RefCell<Option<gio::FileMonitor>>,
     reload_source: RefCell<Option<glib::SourceId>>,
     stats_source: RefCell<Option<glib::SourceId>>,
@@ -176,6 +171,12 @@ impl Window {
             .tooltip_text(format!("{} (Ctrl+F)", tr("Find")))
             .build();
         header.pack_end(&search_button);
+        let typography_button = gtk::MenuButton::builder()
+            .icon_name("font-select-symbolic")
+            .menu_model(&crate::application::typography_menu())
+            .tooltip_text(tr("Font and Text Size"))
+            .build();
+        header.pack_end(&typography_button);
 
         // ---- search bar
         let search_entry = gtk::SearchEntry::builder().placeholder_text(tr("Find in document")).hexpand(true).build();
@@ -288,6 +289,7 @@ impl Window {
         bp.add_setter(&mode_groups[0], "visible", Some(&false.to_value()));
         bp.add_setter(&mode_groups[1], "visible", Some(&true.to_value()));
         bp.add_setter(&search_button, "visible", Some(&false.to_value())); // still in the menu, Ctrl+F, or just type
+        bp.add_setter(&typography_button, "visible", Some(&false.to_value())); // in the main menu too
         window.add_breakpoint(bp);
 
         let this = Rc::new(Self {
@@ -320,7 +322,6 @@ impl Window {
             folder: RefCell::new(None),
             history: RefCell::new(vec![]),
             forward: RefCell::new(vec![]),
-            zoom: Cell::new(st.zoom),
             monitor: RefCell::new(None),
             reload_source: RefCell::new(None),
             stats_source: RefCell::new(None),
@@ -341,7 +342,6 @@ impl Window {
         this.setup_actions();
         this.update_nav();
         this.refresh_banner();
-        this.apply_zoom();
         this.set_mode(this.mode.get());
         this
     }
@@ -512,9 +512,6 @@ impl Window {
         add("toggle-sidebar", |w| w.split.set_show_sidebar(!w.split.shows_sidebar()));
         add("show-contents", |w| w.show_side("contents"));
         add("show-files", |w| w.show_side("files"));
-        add("zoom-in", |w| w.step_zoom(1));
-        add("zoom-out", |w| w.step_zoom(-1));
-        add("zoom-reset", |w| w.set_zoom(100));
         add("back", |w| w.go_back());
         add("forward", |w| w.go_forward());
         add("edit", |w| w.edit_externally());
@@ -1426,34 +1423,6 @@ impl Window {
         }
     }
 
-    // -------------------------------------------------------------- zoom
-
-    fn step_zoom(&self, d: i32) {
-        let i = ZOOM_STEPS.iter().enumerate().min_by_key(|(_, z)| (**z - self.zoom.get()).abs()).map(|(i, _)| i).unwrap_or(5) as i32;
-        let next = (i + d).clamp(0, ZOOM_STEPS.len() as i32 - 1) as usize;
-        self.set_zoom(ZOOM_STEPS[next]);
-    }
-
-    fn set_zoom(&self, z: i32) {
-        self.zoom.set(z);
-        self.apply_zoom();
-        if z != 100 {
-            self.toast(&fill(&tr("Zoom {percent}%"), &[("percent", &z.to_string())]), 1);
-        }
-    }
-
-    fn apply_zoom(&self) {
-        let views: [gtk::Widget; 2] = [self.doc.clone().upcast(), self.source.clone().upcast()];
-        for view in views {
-            for c in view.css_classes() {
-                if c.starts_with("zoom-") {
-                    view.remove_css_class(&c);
-                }
-            }
-            view.add_css_class(&format!("zoom-{}", self.zoom.get()));
-        }
-    }
-
     // -------------------------------------------------------------- misc
 
     #[cfg(debug_assertions)]
@@ -1574,6 +1543,20 @@ impl Window {
         let f = src.active_formats();
         check("active formats at the caret", f.strong && !f.emphasis, format!("{f:?}"));
 
+        use crate::application::{current_font, current_size};
+        use crate::typography::{ReadingFont, TextSize};
+        let app = self.window.application().unwrap();
+        let (font, size) = (current_font(), current_size());
+        app.activate_action("text-larger", None);
+        let larger = current_size();
+        app.activate_action("font", Some(&"serif".to_variant()));
+        let serif = current_font();
+        app.activate_action("text-reset", None);
+        check("text size and font change live", larger == size.larger().unwrap_or(size) && serif == ReadingFont::Serif
+            && current_size() == TextSize::STANDARD, format!("{larger:?} {serif:?} {:?}", current_size()));
+        app.activate_action("font", Some(&font.name().to_variant()));
+        let _ = size;
+
         // saving: written atomically, and never over a file changed elsewhere
         let Some(file) = self.current.borrow().clone() else { return };
         let read = || file.load_contents(gio::Cancellable::NONE).map(|(b, _)| String::from_utf8_lossy(&b).into_owned()).unwrap_or_default();
@@ -1648,7 +1631,6 @@ impl Window {
         if self.banner.is_revealed() {
             st.banner_dismissed = true; // only nag once
         }
-        st.zoom = self.zoom.get();
         st.mode = self.mode.get().name().into();
         st.sidebar = self.split.shows_sidebar();
         st.maximized = self.window.is_maximized();
@@ -1708,7 +1690,9 @@ fn main_menu() -> gio::Menu {
         menu.append_section(None, &s);
     };
     section(&[(tr("New Window"), "app.new-window"), (tr("Find"), "win.find"), (tr("Reload"), "win.reload")]);
-    section(&[(tr("Zoom In"), "win.zoom-in"), (tr("Zoom Out"), "win.zoom-out"), (tr("Reset Zoom"), "win.zoom-reset")]);
+    let text = crate::application::size_menu();
+    text.append_submenu(Some(&tr("Font")), &crate::application::font_menu());
+    menu.append_section(None, &text);
     section(&[
         (tr("Edit in Text Editor"), "win.edit"),
         (tr("Show in Files"), "win.show-in-files"),

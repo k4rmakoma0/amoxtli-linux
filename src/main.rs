@@ -9,6 +9,7 @@ mod editor;
 mod i18n;
 mod markdown;
 mod sidebar;
+mod typography;
 mod widgets;
 mod window;
 

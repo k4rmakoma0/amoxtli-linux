@@ -1,5 +1,6 @@
-//! Constants and small persistent UI state (window size, zoom…) stored with GKeyFile.
+//! Constants and small persistent UI state (window size, typography…) stored with GKeyFile.
 
+use crate::typography::TextSize;
 use gtk::glib;
 use std::path::PathBuf;
 
@@ -54,7 +55,9 @@ pub struct State {
     pub width: i32,
     pub height: i32,
     pub maximized: bool,
-    pub zoom: i32,
+    /// `system`, `serif`, `monospace` or `rounded`.
+    pub font: String,
+    pub text_size: TextSize,
     pub sidebar: bool,
     pub banner_dismissed: bool,
     /// The editor mode of the last window closed: `source`, `format` or `split`.
@@ -63,7 +66,7 @@ pub struct State {
 
 impl Default for State {
     fn default() -> Self {
-        Self { width: 1100, height: 780, maximized: false, zoom: 100, sidebar: true, banner_dismissed: false, mode: "format".into() }
+        Self { width: 1100, height: 780, maximized: false, font: "system".into(), text_size: TextSize::STANDARD, sidebar: true, banner_dismissed: false, mode: "format".into() }
     }
 }
 
@@ -83,7 +86,10 @@ impl State {
         if let Ok(v) = kf.integer(GROUP, "width") { st.width = v.max(360); }
         if let Ok(v) = kf.integer(GROUP, "height") { st.height = v.max(300); }
         if let Ok(v) = kf.boolean(GROUP, "maximized") { st.maximized = v; }
-        if let Ok(v) = kf.integer(GROUP, "zoom") { st.zoom = v.clamp(50, 300); }
+        // 1.x saved a zoom percentage instead of a text size
+        if let Ok(v) = kf.integer(GROUP, "zoom") { st.text_size = TextSize::from_zoom(v); }
+        if let Ok(v) = kf.integer(GROUP, "text_size") { st.text_size = TextSize::nearest(v); }
+        if let Ok(v) = kf.string(GROUP, "font") { st.font = v.into(); }
         if let Ok(v) = kf.boolean(GROUP, "sidebar") { st.sidebar = v; }
         if let Ok(v) = kf.boolean(GROUP, "banner_dismissed") { st.banner_dismissed = v; }
         if let Ok(v) = kf.string(GROUP, "mode") { st.mode = v.into(); }
@@ -95,7 +101,8 @@ impl State {
         kf.set_integer(GROUP, "width", self.width);
         kf.set_integer(GROUP, "height", self.height);
         kf.set_boolean(GROUP, "maximized", self.maximized);
-        kf.set_integer(GROUP, "zoom", self.zoom);
+        kf.set_integer(GROUP, "text_size", self.text_size.points());
+        kf.set_string(GROUP, "font", &self.font);
         kf.set_boolean(GROUP, "sidebar", self.sidebar);
         kf.set_boolean(GROUP, "banner_dismissed", self.banner_dismissed);
         kf.set_string(GROUP, "mode", &self.mode);

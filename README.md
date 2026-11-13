@@ -35,7 +35,9 @@ Pango-shaped text in a `GtkTextView`, tables as `GtkGrid`s, images as GPU textur
 - CommonMark + tables, task lists, strikethrough, footnotes, GitHub alerts (`> [!NOTE]`),
   `{#custom-id}` heading anchors, smart quotes, YAML/TOML front matter (hidden)
 - Syntax-highlighted code (syntect), local and remote images (PNG/JPEG/SVG/GIF/WebP), `<img>`/`<br>` HTML
-- Find in document (`Ctrl+F`, or just start typing), zoom (`Ctrl +/-/0`)
+- Find in document (`Ctrl+F`, or just start typing)
+- Choose the font (System, Serif, Monospace, or Rounded when a rounded font is installed) and the text
+  size (`Ctrl +/-/0`) from the **Aa** menu, for the source and the formatted view alike
 - Light/dark mode and the system accent colour, adaptive layout for narrow windows
 - Can register itself as the default app for `text/markdown`
 - Word count and reading time in the status bar (or for the selected text)
@@ -135,6 +137,7 @@ src/widgets.rs       FitImage / FitBox helper widgets
 src/sidebar.rs       outline (index) and folder tree panels
 src/i18n.rs          gettext setup
 src/config.rs        constants and saved window state
+src/typography.rs    font and text size choices (tested)
 po/                  translations (.po) and template (.pot)
 tools/i18n.py        extract / merge / compile / check translations
 tools/package.sh     build the prebuilt release tarball into dist/
