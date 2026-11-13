@@ -208,7 +208,6 @@ impl Window {
 
         // ---- document
         let doc = RichView::new();
-        doc.set_extra_menu(Some(&editor::context_menu()));
         let clamp = adw::ClampScrollable::builder().child(&doc).maximum_size(920).tightening_threshold(640).build();
         let scroller = gtk::ScrolledWindow::builder().child(&clamp).vexpand(true).hexpand(true).build();
         let source = SourceView::new();
@@ -1735,6 +1734,34 @@ impl Window {
         app.activate_action("font", Some(&font.name().to_variant()));
         let _ = size;
 
+        // code colors in the source: written fences color, closing ones stop it
+        let tok = |name: &str| self.source.buffer().tag_table().lookup(name).unwrap();
+        let line_has = |line: i32, name: &str| {
+            let b = self.source.buffer();
+            let mut it = b.iter_at_line(line).unwrap();
+            let mut end = it;
+            end.forward_to_line_end();
+            let t = tok(name);
+            while it < end {
+                if it.has_tag(&t) {
+                    return true;
+                }
+                it.forward_char();
+            }
+            false
+        };
+        load("```\nlet a\n```");
+        let plain = !line_has(1, "tok-keyword");
+        let sb = self.source.buffer();
+        let mut at = sb.iter_at_line_offset(0, 3).unwrap();
+        sb.insert(&mut at, "swift");
+        check("source: writing the language in the fence colors the block", plain && line_has(1, "tok-keyword"), String::new());
+        load("```swift\nlet a\nlet b");
+        let both = line_has(1, "tok-keyword") && line_has(2, "tok-keyword");
+        let mut at = sb.iter_at_line(2).unwrap();
+        sb.insert(&mut at, "```\n");
+        check("source: closing the block uncolors what follows", both && !line_has(3, "tok-keyword"), String::new());
+
         self.rich_self_test(&mut check);
 
         // an edit in the formatted editor reaches the Markdown text, and the file
@@ -1821,6 +1848,20 @@ impl Window {
             this.split_scroll.follow(Side::Source);
             let mid = this.scroller.vadjustment().value();
             report("split: between blocks, positions are interpolated", (mid - (a.formatted + b.formatted) / 2.0).abs() < 1.0, format!("{mid}"));
+            // the chip of a code block on screen finds its block; its code doesn't
+            let chips = this.doc.drawn_chips();
+            match chips.first() {
+                Some((rect, line)) => {
+                    let (wx, wy) = this.doc.buffer_to_window_coords(gtk::TextWindowType::Widget, (rect.x() + rect.width() / 2.0) as i32, (rect.y() + rect.height() / 2.0) as i32);
+                    let found = this.doc.chip_at(wx as f64, wy as f64).map(|(l, _)| l);
+                    let (ly, _) = this.doc.line_yrange(&this.doc.buffer().iter_at_line(*line).unwrap());
+                    let (tx, ty) = this.doc.buffer_to_window_coords(gtk::TextWindowType::Widget, 60, ly + 30);
+                    let on_code = this.doc.chip_at(tx as f64, ty as f64);
+                    report("rich: the chip finds its block, the code isn't the chip", found == Some(*line) && on_code.is_none()
+                        && this.doc.kind_at_line(*line).block.is_code(), format!("{found:?} {on_code:?}"));
+                }
+                None => report("rich: a chip is drawn for each code block on screen", false, "none".into()),
+            }
             println!("scroll-test: done");
         });
     }
@@ -1975,6 +2016,26 @@ impl Window {
         let sample = "# Doc\n\nSome **bold** and [a link](u).\n\n> [!TIP]\n> Alert\n\n| A | B |\n| :--- | ---: |\n| 1 |  |\n\n- [ ] task\n\n<div>raw</div>\n";
         load(sample);
         check("rich: what opens comes back unchanged", md() == sample, md());
+        load("```\nx = 1\n```");
+        buf.place_cursor(&buf.start_iter());
+        doc.set_code_language(Some("json".into()));
+        let chosen = md();
+        doc.undo();
+        check("rich: choosing a language writes the fence, one undo step", chosen == "```json\nx = 1\n```\n" && md() == "```\nx = 1\n```\n",
+            format!("{chosen:?} then {:?}", md()));
+        load("```swift\nlet a\n```");
+        let keyword = buf.tag_table().lookup("tok-keyword").unwrap();
+        let colored = buf.start_iter().has_tag(&keyword);
+        buf.place_cursor(&buf.start_iter());
+        doc.set_code_language(None);
+        check("rich: code is colored by its language, and not without one", colored && !buf.start_iter().has_tag(&keyword), String::new());
+        load("```rust\nfn a() {}\n```");
+        buf.place_cursor(&buf.start_iter());
+        let menu = doc.language_menu();
+        let first = menu.item_link(0, "section").and_then(|s| s.item_attribute_value(0, "label", None)).and_then(|v| v.str().map(str::to_owned));
+        let known: Vec<String> = menu.item_link(1, "section").map(|s| (0..s.n_items()).filter_map(|i| s.item_attribute_value(i, "label", None).and_then(|v| v.str().map(str::to_owned))).collect()).unwrap_or_default();
+        check("rich: the menu shows an unknown language first, then None and the known ones by name",
+            first.as_deref() == Some("rust") && known.first().map(String::as_str) == Some("CSS") && known.len() == 9, format!("{first:?} {known:?}"));
         if let Some((_, table)) = doc.imp_tables().first().cloned() {
             let cell = &table.cells[1][1];
             cell.buffer().insert_interactive_at_cursor("2", true);

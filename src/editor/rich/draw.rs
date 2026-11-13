@@ -10,7 +10,7 @@ use gtk::{gdk, graphene, gsk, pango};
 use std::collections::HashMap;
 
 /// Space between a code block's background and its text.
-const CODE_PAD: i32 = 8;
+pub(super) const CODE_PAD: i32 = 8;
 const BULLETS: [&str; 3] = ["•", "◦", "▪"];
 
 /// The settings of a line's look tag.
@@ -33,7 +33,7 @@ fn indent_px(containers: &[Container], scale: f64) -> i32 {
         .sum()
 }
 
-fn same_code(a: &Kind, b: Option<&Kind>) -> bool {
+pub(super) fn same_code(a: &Kind, b: Option<&Kind>) -> bool {
     match (&a.block, b.map(|k| &k.block)) {
         (Block::Code { id: x, .. }, Some(Block::Code { id: y, .. })) => x == y && Some(&a.containers) == b.map(|k| &k.containers),
         (Block::Raw { id: x }, Some(Block::Raw { id: y })) => x == y,
@@ -70,7 +70,8 @@ impl Look {
             Block::Heading { level, .. } => {
                 if *level <= 2 { px(1.0) } else { px(0.5) }
             }
-            Block::Code { .. } if first_of_block => px(0.4) + CODE_PAD,
+            // and room for the strip with the language chip
+            Block::Code { .. } if first_of_block => px(0.4) + CODE_PAD + super::language::strip_height(scale),
             _ => 0,
         };
         let below = match &kind.block {
@@ -205,6 +206,7 @@ impl RichView {
         let markers = self.line_markers();
         let count = buf.line_count();
 
+        self.imp().chips.borrow_mut().clear();
         let (start, _) = self.line_at_y(visible.y());
         let mut line = start.line();
         let mut previous = (line > 0).then(|| self.line_kind_for_drawing(line - 1)).flatten();
@@ -222,7 +224,7 @@ impl RichView {
                 // a code block's background in one piece, rounded at its ends
                 if kind.block.is_code() && line > code_drawn_to {
                     let first = !same_code(kind, previous.as_ref());
-                    let top = if first { y + look.above - CODE_PAD } else { y };
+                    let top = if first { y + look.above - CODE_PAD - super::language::strip_height(scale) } else { y };
                     let mut last_line = line;
                     let mut last_kind = kind.clone();
                     let mut after = next.clone();
@@ -243,6 +245,10 @@ impl RichView {
                     snapshot.push_rounded_clip(&rounded);
                     snapshot.append_color(&code_bg, &rect);
                     snapshot.pop();
+                    if first {
+                        let chip = self.chip_rect(kind, y, look.above);
+                        self.draw_chip(snapshot, kind, line, &chip);
+                    }
                     code_drawn_to = last_line;
                 }
                 // quote bars, one per quote the line is in

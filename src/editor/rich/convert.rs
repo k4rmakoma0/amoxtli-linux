@@ -87,6 +87,7 @@ impl RichView {
             if lines.last().is_some_and(|l| l.2.table_cell().is_some()) {
                 self.insert_tagged(&mut end, "\n", &previous_tags);
             }
+            self.color_code_blocks(0, buf.line_count() - 1);
         });
         imp.loading.set(false);
         let buf = self.buf();

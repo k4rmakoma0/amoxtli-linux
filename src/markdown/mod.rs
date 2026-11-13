@@ -6,6 +6,7 @@
 //! which the highlighter turns into iters with `iter_at_line_index`.
 
 pub mod active;
+pub mod code;
 pub mod continuation;
 pub mod format;
 pub mod model;

@@ -71,7 +71,6 @@ pub fn is_fence(line: &str) -> bool {
 }
 
 /// What follows the backticks or tildes of a fence line, as `swift` in ```` ```swift ````.
-#[allow(dead_code)] // the language of a code block, used next
 pub fn fence_info(line: &str) -> &str {
     line.trim_start_matches(' ').trim_start_matches(['`', '~']).trim()
 }

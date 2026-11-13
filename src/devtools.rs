@@ -3,6 +3,7 @@
 //! AMOXTLI_SNAPSHOT=out.png        save the window to a PNG after loading, then quit
 //! AMOXTLI_SNAPSHOT_SIZE=WxH        window size
 //! AMOXTLI_SNAPSHOT_DARK=1          force dark style
+//! AMOXTLI_SNAPSHOT_LIGHT=1         force light style
 //! AMOXTLI_SNAPSHOT_HEADING=n       scroll to the n-th heading
 //! AMOXTLI_SNAPSHOT_SEARCH=text     open the search bar with this text
 //! AMOXTLI_SNAPSHOT_SELECT=n        select the first n characters
@@ -24,6 +25,9 @@ pub fn enabled() -> bool {
 pub fn setup(app: &adw::Application) {
     if std::env::var("AMOXTLI_SNAPSHOT_DARK").is_ok() {
         adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceDark);
+    }
+    if std::env::var("AMOXTLI_SNAPSHOT_LIGHT").is_ok() {
+        adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceLight);
     }
     let app = app.clone();
     glib::timeout_add_local_once(Duration::from_millis(1200), move || {

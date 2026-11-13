@@ -4,6 +4,7 @@
 
 use crate::markdown::active::{self, ActiveFormats};
 use crate::markdown::format::{self, FormatCommand};
+use crate::markdown::code::{self, Language, TokenKind};
 use crate::markdown::syntax::{self, Span, SyntaxKind};
 use crate::markdown::{continuation, TextEdit};
 use adw::prelude::*;
@@ -17,7 +18,8 @@ use std::rc::Rc;
 const FENCED: &str = "fenced";
 const HIGHLIGHT_TAGS: &[&str] = &[
     "h1", "h2", "h3", "h4", "h5", "h6", "marker", "strong", "emphasis", "underline", "strike", "code", "link",
-    "quote", "list-marker", FENCED,
+    "quote", "list-marker", FENCED, "tok-keyword", "tok-type", "tok-string", "tok-number", "tok-comment",
+    "tok-property", "tok-tag", "tok-attribute",
 ];
 
 type Callback = Rc<dyn Fn()>;
@@ -319,6 +321,10 @@ impl SourceView {
         code.set_background_rgba(Some(&code_bg));
         tag("link").set_foreground_rgba(Some(&accent));
         tag("list-marker").set_foreground_rgba(Some(&accent));
+        for kind in TokenKind::ALL {
+            let color = kind.color(dark).and_then(|c| gdk::RGBA::parse(c).ok()).unwrap_or(dim);
+            tag(kind.name()).set_foreground_rgba(Some(&color));
+        }
         tag("match").set_background_rgba(Some(&gdk::RGBA::new(0.96, 0.83, 0.18, 0.45)));
         tag("match-current").set_background_rgba(Some(&gdk::RGBA::new(1.0, 0.47, 0.0, 0.65)));
     }
@@ -394,18 +400,90 @@ impl SourceView {
     fn highlight_all(&self) {
         let lines = self.buffer().line_count();
         self.highlight(0, lines - 1, false, false);
+        self.color_code(0, lines - 1);
     }
 
     fn highlight_edit(&self, start: i32, end: i32) {
         let buf = self.buffer();
         let first = buf.iter_at_offset(start).line();
         let last = buf.iter_at_offset(end).line();
-        self.highlight(first, last, self.starts_in_fence(first), true);
+        let to = self.highlight(first, last, self.starts_in_fence(first), true);
+        self.color_code(first, to);
+    }
+
+    // ------------------------------------------------------------ code colors
+
+    fn fenced_tag(&self) -> gtk::TextTag {
+        self.buffer().tag_table().lookup(FENCED).expect("fenced tag")
+    }
+
+    /// Whether a fenced code block is open after a line, as the last pass marked it.
+    fn opens_after(&self, line: i32) -> bool {
+        self.line_bounds(line).0.has_tag(&self.fenced_tag())
+    }
+
+    /// Colors the code blocks lines `first..=last` touch, each one whole, from the line after
+    /// its opening fence up to its closing fence: a comment or a string may span lines.
+    fn color_code(&self, first: i32, last: i32) {
+        let buf = self.buffer();
+        let count = buf.line_count();
+        // back to the opening fence of a block the first line is in
+        let mut line = first.max(0);
+        while line > 0 && self.starts_in_fence(line) {
+            line -= 1;
+        }
+        let mut opening: Option<(String, i32)> = None;
+        while line < count && (line <= last || opening.is_some()) {
+            let starts = self.starts_in_fence(line);
+            let opens = self.opens_after(line);
+            if !starts && opens {
+                let (s, e) = self.line_bounds(line);
+                opening = Some((syntax::fence_info(&buf.text(&s, &e, true)).to_owned(), line + 1));
+            } else if starts && !opens {
+                if let Some((info, from)) = opening.take() {
+                    self.color_block(from, line, &info);
+                }
+            }
+            line += 1;
+        }
+        if let Some((info, from)) = opening {
+            self.color_block(from, count, &info);
+        }
+    }
+
+    /// Lines `from..to` are one block's code.
+    fn color_block(&self, from: i32, to: i32, info: &str) {
+        let buf = self.buffer();
+        if from >= to || from >= buf.line_count() {
+            return;
+        }
+        let start = buf.iter_at_line(from).unwrap_or_else(|| buf.end_iter());
+        let end = match buf.iter_at_line(to) {
+            Some(mut it) if to < buf.line_count() => {
+                it.backward_char();
+                it
+            }
+            _ => buf.end_iter(),
+        };
+        let table = buf.tag_table();
+        for kind in TokenKind::ALL {
+            if let Some(t) = table.lookup(kind.name()) {
+                buf.remove_tag(&t, &start, &end);
+            }
+        }
+        let Some(language) = Language::from_info(info) else { return };
+        let base = start.offset();
+        for token in code::tokens(&buf.text(&start, &end, true), language) {
+            if let Some(t) = table.lookup(token.kind.name()) {
+                buf.apply_tag(&t, &buf.iter_at_offset(base + token.range.start as i32), &buf.iter_at_offset(base + token.range.end as i32));
+            }
+        }
     }
 
     /// Styles lines `first..=last`. With `follow_up`, when the edit opened or closed a
     /// code block, the lines after it are styled again too.
-    fn highlight(&self, first: i32, last: i32, starts_in_fence: bool, follow_up: bool) {
+    /// Returns the last line styled.
+    fn highlight(&self, first: i32, last: i32, starts_in_fence: bool, follow_up: bool) -> i32 {
         let buf = self.buffer();
         let table = buf.tag_table();
         let tags: Vec<gtk::TextTag> = HIGHLIGHT_TAGS.iter().filter_map(|n| table.lookup(n)).collect();
@@ -442,8 +520,9 @@ impl SourceView {
         let lines = buf.line_count();
         if follow_up && last + 1 < lines && in_fence != self.next_line_starts_in_fence(last + 1, &fenced) {
             // The edit opened or closed a code block: everything below it changes.
-            self.highlight(last + 1, lines - 1, in_fence, false);
+            return self.highlight(last + 1, lines - 1, in_fence, false);
         }
+        last
     }
 
     /// What a line was scanned with, worked out from how it was marked: a fence line marked

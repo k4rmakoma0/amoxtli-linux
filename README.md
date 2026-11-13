@@ -29,6 +29,9 @@ Pango-shaped text in a `GtkTextView`, tables as grids of editable cells, images 
 - Formatting tools in both editors (`Ctrl+B`, `Ctrl+I`, `Ctrl+1…6` for headings, `Ctrl+K` for links…);
   lists continue on Return and end on an empty item, `Tab` nests them, `# ` typed starts a heading,
   tables are edited cell by cell. Links open with `Ctrl+click` in the formatted view
+- Code blocks colored by language in both editors (Swift, Python, JavaScript, TypeScript, JSON,
+  HTML/XML, CSS, SQL and Shell, with a small hand-written lexer); in the formatted view, a chip on each
+  block shows its language and changes it
 - Opening a file never rewrites it. Edits are saved a second after you stop typing (or `Ctrl+S`), and
   never over a file another app changed: Amoxtli asks which version to keep
 - **Contents** sidebar: the document's table of contents, follows your scroll position
@@ -136,7 +139,7 @@ src/application.rs   Adw.Application: actions, shortcuts, CSS, file opening
 src/window.rs        main window: header bar, split view, search, history, reload, status bar
 src/document.rs      headings, word counts and other helpers both editors share
 src/markdown/        GTK-free logic (tested): document model, parser and canonical serializer,
-                     syntax scanner, formatting tools, Return in lists
+                     syntax scanner, code lexers, formatting tools, Return in lists, split scroll map
 src/editor/          source editor, formatting toolbar and menus, link/table dialogs
 src/editor/rich/     the formatted editor: conversion, keys, tools, drawing, tables, undo
 src/widgets.rs       FitImage / FitBox helper widgets

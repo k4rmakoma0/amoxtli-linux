@@ -9,10 +9,12 @@
 mod convert;
 mod draw;
 mod keys;
+mod language;
 pub mod table;
 mod tools;
 
 use crate::document::Heading;
+use crate::markdown::code::{self, Language, TokenKind};
 use crate::markdown::model::{Block, InlineStyle, Kind, Link};
 use adw::prelude::*;
 use gtk::subclass::prelude::*;
@@ -123,6 +125,12 @@ mod imp {
         pub on_formats: RefCell<Option<Callback>>,
         pub on_link: RefCell<Option<LinkHandler>>,
         pub formats_queued: Cell<bool>,
+        /// The chips drawn last, with the first line of their code block, for clicks.
+        pub chips: RefCell<Vec<(gtk::graphene::Rect, i32)>>,
+        pub over_chip: Cell<bool>,
+        pub language_action: RefCell<Option<gio::SimpleAction>>,
+        /// What the context menu was last built for.
+        pub menu_key: RefCell<String>,
         pub hovering: Cell<bool>,
     }
 
@@ -200,7 +208,14 @@ impl RichView {
         for (_, name) in STYLE_TAGS {
             table.add(&gtk::TextTag::new(Some(name)));
         }
-        for name in ["h1", "h2", "h3", "h4", "h5", "h6", "code-line", "raw-line", "quoted", LITERAL_HASH, "match", "match-current"] {
+        for name in ["h1", "h2", "h3", "h4", "h5", "h6", "code-line", "raw-line", "quoted", LITERAL_HASH] {
+            table.add(&gtk::TextTag::new(Some(name)));
+        }
+        for kind in TokenKind::ALL {
+            table.add(&gtk::TextTag::new(Some(kind.name())));
+        }
+        // search highlights last, above everything
+        for name in ["match", "match-current"] {
             table.add(&gtk::TextTag::new(Some(name)));
         }
         self.restyle_tags();
@@ -227,6 +242,7 @@ impl RichView {
         });
         self.setup_keys();
         self.setup_pointer();
+        self.setup_language();
     }
 
     /// The editor's buffer, even while the view shows a placeholder.
@@ -395,6 +411,10 @@ impl RichView {
         raw_line.set_family(Some("monospace"));
         raw_line.set_foreground_rgba(Some(&dim));
         self.tag("quoted").set_foreground_rgba(Some(&dim));
+        for kind in TokenKind::ALL {
+            let color = kind.color(dark).and_then(|c| gdk::RGBA::parse(c).ok()).unwrap_or(dim);
+            self.tag(kind.name()).set_foreground_rgba(Some(&color));
+        }
         self.tag("match").set_background_rgba(Some(&gdk::RGBA::new(0.96, 0.83, 0.18, 0.45)));
         self.tag("match-current").set_background_rgba(Some(&gdk::RGBA::new(1.0, 0.47, 0.0, 0.65)));
         let table = self.buf().tag_table();
@@ -581,6 +601,7 @@ impl RichView {
                 self.remove_link_tags(&start, &content_end);
             }
         }
+        self.color_code_blocks(first, last);
     }
 
     /// The tags a line carries: its kind, and its look derived from the kind and the neighbors.
@@ -596,6 +617,44 @@ impl RichView {
             tags.push(self.tag("quoted"));
         }
         tags
+    }
+
+    /// Colors the code blocks lines `first..=last` touch, each one whole: a comment or a
+    /// string may span lines.
+    pub fn color_code_blocks(&self, first: i32, last: i32) {
+        let count = self.buf().line_count();
+        let mut line = first.clamp(0, count - 1);
+        while line > 0 && draw::same_code(&self.kind_at_line(line), Some(&self.kind_at_line(line - 1))) {
+            line -= 1;
+        }
+        while line < count && line <= last {
+            let kind = self.kind_at_line(line);
+            let Block::Code { info, .. } = &kind.block else {
+                line += 1;
+                continue;
+            };
+            let mut end = line;
+            while end + 1 < count && draw::same_code(&kind, Some(&self.kind_at_line(end + 1))) {
+                end += 1;
+            }
+            self.color_block(line, end, info.as_deref());
+            line = end + 1;
+        }
+    }
+
+    fn color_block(&self, first: i32, last: i32, info: Option<&str>) {
+        let buf = self.buf();
+        let (start, _) = self.line_bounds(first);
+        let (_, end) = self.line_bounds(last);
+        for kind in TokenKind::ALL {
+            buf.remove_tag(&self.tag(kind.name()), &start, &end);
+        }
+        let Some(language) = info.and_then(Language::from_info) else { return };
+        let base = start.offset();
+        for token in code::tokens(&buf.text(&start, &end, false), language) {
+            let (s, e) = (buf.iter_at_offset(base + token.range.start as i32), buf.iter_at_offset(base + token.range.end as i32));
+            buf.apply_tag(&self.tag(token.kind.name()), &s, &e);
+        }
     }
 
     /// The kind of the empty last line while the caret is on it, when it isn't body text. It
@@ -851,6 +910,7 @@ impl RichView {
         if caret != imp.group_caret.get() {
             imp.group.set(Group::None); // a moved caret starts a new undo step
         }
+        self.update_context_menu();
         if imp.pending.get().is_none() {
             self.update_typing_style();
             // the empty last line forgets its kind once the caret leaves it
