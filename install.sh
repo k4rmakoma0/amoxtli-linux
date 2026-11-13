@@ -48,6 +48,9 @@ sed "s|@BINDIR@|$BINDIR|g" "data/$APP_ID.desktop.in" > "$DATADIR/applications/$A
 install -m 644 "data/$APP_ID.metainfo.xml" "$DATADIR/metainfo/"
 install -m 644 "data/icons/hicolor/scalable/apps/$APP_ID.svg" "$DATADIR/icons/hicolor/scalable/apps/"
 install -m 644 "data/icons/hicolor/symbolic/apps/$APP_ID-symbolic.svg" "$DATADIR/icons/hicolor/symbolic/apps/"
+# toolbar icons Adwaita doesn't have (quote, code, table…)
+install -d "$DATADIR/icons/hicolor/scalable/actions"
+install -m 644 data/icons/hicolor/scalable/actions/amoxtli-*-symbolic.svg "$DATADIR/icons/hicolor/scalable/actions/"
 
 # remove the old Python version if present
 rm -rf "$DATADIR/amoxtli"

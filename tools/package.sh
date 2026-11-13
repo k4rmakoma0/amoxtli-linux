@@ -18,6 +18,8 @@ cp "data/$APP_ID.desktop.in" "$STAGE/share/applications/"
 cp "data/$APP_ID.metainfo.xml" "$STAGE/share/metainfo/"
 cp "data/icons/hicolor/scalable/apps/$APP_ID.svg" "$STAGE/share/icons/hicolor/scalable/apps/"
 cp "data/icons/hicolor/symbolic/apps/$APP_ID-symbolic.svg" "$STAGE/share/icons/hicolor/symbolic/apps/"
+mkdir -p "$STAGE/share/icons/hicolor/scalable/actions"
+cp data/icons/hicolor/scalable/actions/amoxtli-*-symbolic.svg "$STAGE/share/icons/hicolor/scalable/actions/"
 cp LICENSE README.md "$STAGE/"
 
 cat > "$STAGE/install.sh" <<'SH'

@@ -57,11 +57,13 @@ pub struct State {
     pub zoom: i32,
     pub sidebar: bool,
     pub banner_dismissed: bool,
+    /// The editor mode of the last window closed: `source`, `format` or `split`.
+    pub mode: String,
 }
 
 impl Default for State {
     fn default() -> Self {
-        Self { width: 1100, height: 780, maximized: false, zoom: 100, sidebar: true, banner_dismissed: false }
+        Self { width: 1100, height: 780, maximized: false, zoom: 100, sidebar: true, banner_dismissed: false, mode: "format".into() }
     }
 }
 
@@ -84,6 +86,7 @@ impl State {
         if let Ok(v) = kf.integer(GROUP, "zoom") { st.zoom = v.clamp(50, 300); }
         if let Ok(v) = kf.boolean(GROUP, "sidebar") { st.sidebar = v; }
         if let Ok(v) = kf.boolean(GROUP, "banner_dismissed") { st.banner_dismissed = v; }
+        if let Ok(v) = kf.string(GROUP, "mode") { st.mode = v.into(); }
         st
     }
 
@@ -95,6 +98,7 @@ impl State {
         kf.set_integer(GROUP, "zoom", self.zoom);
         kf.set_boolean(GROUP, "sidebar", self.sidebar);
         kf.set_boolean(GROUP, "banner_dismissed", self.banner_dismissed);
+        kf.set_string(GROUP, "mode", &self.mode);
         let path = state_path();
         if let Some(dir) = path.parent() {
             let _ = std::fs::create_dir_all(dir);

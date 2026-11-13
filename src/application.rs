@@ -2,7 +2,8 @@
 
 use crate::config::{self, APP_ID, MIME_TYPES, VERSION};
 use crate::i18n::tr;
-use crate::window::Window;
+use crate::editor::{self, EditorMode, Toggle};
+use crate::window::{mode_accel, Window};
 use adw::prelude::*;
 use gtk::{gdk, gio, glib};
 use std::rc::Rc;
@@ -103,20 +104,32 @@ fn startup(app: &adw::Application) {
         ("win.reload", &["<Ctrl>r", "F5"]),
         ("win.find", &["<Ctrl>f"]),
         ("win.toggle-sidebar", &["F9"]),
-        ("win.show-contents", &["<Ctrl>1"]),
-        ("win.show-files", &["<Ctrl>2"]),
+        // Ctrl+1…7 are the paragraph styles, as on macOS
+        ("win.show-contents", &["<Ctrl><Alt>1"]),
+        ("win.show-files", &["<Ctrl><Alt>2"]),
         ("win.zoom-in", &["<Ctrl>plus", "<Ctrl>equal", "<Ctrl>KP_Add"]),
         ("win.zoom-out", &["<Ctrl>minus", "<Ctrl>KP_Subtract"]),
         ("win.zoom-reset", &["<Ctrl>0", "<Ctrl>KP_0"]),
         ("win.back", &["<Alt>Left", "Back"]),
         ("win.forward", &["<Alt>Right", "Forward"]),
-        ("win.edit", &["<Ctrl>e"]),
+        // Ctrl+E is inline code
+        ("win.edit", &["<Ctrl><Shift>e"]),
+        ("win.save", &["<Ctrl>s"]),
         ("win.copy-path", &["<Ctrl><Shift>c"]),
         ("win.close", &["<Ctrl>w"]),
         ("win.top", &["<Ctrl>Home"]),
     ];
     for (action, keys) in accels {
         app.set_accels_for_action(action, keys);
+    }
+    for mode in [EditorMode::Source, EditorMode::Format, EditorMode::Split] {
+        app.set_accels_for_action(&format!("win.mode::{}", mode.name()), &[mode_accel(mode)]);
+    }
+    for tool in Toggle::ALL {
+        app.set_accels_for_action(&format!("win.{}", tool.action()), tool.accels());
+    }
+    for name in editor::style_names() {
+        app.set_accels_for_action(&format!("win.{}::{name}", editor::STYLE_ACTION), &[&editor::style_accel(name)]);
     }
 }
 
@@ -162,7 +175,7 @@ fn about(app: &adw::Application) {
 
 fn shortcuts(app: &adw::Application) {
     let dialog = adw::ShortcutsDialog::new();
-    let groups: [(String, Vec<(String, &str)>); 3] = [
+    let fixed: Vec<(String, Vec<(String, &str)>)> = vec![
         (tr("General"), vec![
             (tr("Open File"), "<Ctrl>o"),
             (tr("Open Folder"), "<Ctrl><Shift>o"),
@@ -171,10 +184,18 @@ fn shortcuts(app: &adw::Application) {
             (tr("Quit"), "<Ctrl>q"),
             (tr("Keyboard Shortcuts"), "<Ctrl>question"),
         ]),
+        (tr("Editing"), vec![
+            (tr("Save"), "<Ctrl>s"),
+            (tr("Undo"), "<Ctrl>z"),
+            (tr("Redo"), "<Ctrl><Shift>z"),
+            (tr("Show Source"), mode_accel(EditorMode::Source)),
+            (tr("Show Formatted"), mode_accel(EditorMode::Format)),
+            (tr("Show Split"), mode_accel(EditorMode::Split)),
+        ]),
         (tr("Document"), vec![
             (tr("Find"), "<Ctrl>f"),
             (tr("Reload"), "<Ctrl>r"),
-            (tr("Edit in Text Editor"), "<Ctrl>e"),
+            (tr("Edit in Text Editor"), "<Ctrl><Shift>e"),
             (tr("Copy File Path"), "<Ctrl><Shift>c"),
             (tr("Back"), "<Alt>Left"),
             (tr("Forward"), "<Alt>Right"),
@@ -182,17 +203,29 @@ fn shortcuts(app: &adw::Application) {
         ]),
         (tr("View"), vec![
             (tr("Toggle Sidebar"), "F9"),
-            (tr("Show Contents"), "<Ctrl>1"),
-            (tr("Show Files"), "<Ctrl>2"),
+            (tr("Show Contents"), "<Ctrl><Alt>1"),
+            (tr("Show Files"), "<Ctrl><Alt>2"),
             (tr("Zoom In"), "<Ctrl>plus"),
             (tr("Zoom Out"), "<Ctrl>minus"),
             (tr("Reset Zoom"), "<Ctrl>0"),
         ]),
     ];
+    let mut groups: Vec<(String, Vec<(String, String)>)> = fixed
+        .into_iter()
+        .map(|(title, items)| (title, items.into_iter().map(|(n, a)| (n, a.to_owned())).collect()))
+        .collect();
+    let mut format = vec![];
+    for name in editor::style_names() {
+        format.push((editor::style_label(name), editor::style_accel(name)));
+    }
+    for tool in Toggle::ALL {
+        format.push((tool.label().trim_end_matches('…').to_owned(), tool.accels()[0].to_owned()));
+    }
+    groups.push((tr("Format"), format));
     for (title, items) in groups {
         let section = adw::ShortcutsSection::new(Some(&title));
         for (name, accel) in items {
-            section.add(adw::ShortcutsItem::new(&name, accel));
+            section.add(adw::ShortcutsItem::new(&name, &accel));
         }
         dialog.add(section);
     }

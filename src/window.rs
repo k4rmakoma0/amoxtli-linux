@@ -2,6 +2,9 @@
 
 use crate::config::{self, State, APP_ID, MIME_TYPES};
 use crate::document::{DocumentView, Heading};
+use crate::editor::source_view::SourceView;
+use crate::editor::{self, EditorMode, Insert, Toggle, STYLE_ACTION};
+use crate::markdown::format::FormatCommand;
 use crate::i18n::{fill, group_digits, tr, trn};
 use crate::sidebar::{is_markdown_name, FilesPanel, OutlinePanel, MARKDOWN_SUFFIXES};
 use adw::prelude::*;
@@ -48,6 +51,11 @@ pub struct Window {
     match_label: gtk::Label,
     doc: DocumentView,
     scroller: gtk::ScrolledWindow,
+    source: SourceView,
+    source_scroller: gtk::ScrolledWindow,
+    paned: gtk::Paned,
+    format_row: gtk::Box,
+    mode_groups: [adw::ToggleGroup; 2],
     content_stack: gtk::Stack,
     error_page: adw::StatusPage,
     banner: adw::Banner,
@@ -69,6 +77,17 @@ pub struct Window {
     match_index: Cell<i32>,
     total_words: Cell<u64>,
     style_handlers: RefCell<Vec<glib::SignalHandlerId>>,
+
+    mode: Cell<EditorMode>,
+    /// The file's bytes as last read or written; `None` when nothing editable is open.
+    disk: RefCell<Option<Vec<u8>>>,
+    /// Edits not written to the file yet.
+    dirty: Cell<bool>,
+    save_source: RefCell<Option<glib::SourceId>>,
+    render_source: RefCell<Option<glib::SourceId>>,
+    /// Where each heading of the Contents panel starts in the source, in characters.
+    heading_offsets: RefCell<Vec<i32>>,
+    conflict_open: Cell<bool>,
 }
 
 impl Window {
@@ -139,6 +158,11 @@ impl Window {
             .visible(false)
             .build();
         header.pack_start(&open_icon_btn);
+        // Next to Open: switching to the source is how editing starts.
+        let mode_groups = [mode_toggles(false), mode_toggles(true)];
+        mode_groups[1].set_visible(false);
+        header.pack_start(&mode_groups[0]);
+        header.pack_start(&mode_groups[1]);
         let title = adw::WindowTitle::new("Amoxtli", "");
         header.set_title_widget(Some(&title));
         header.pack_end(&gtk::MenuButton::builder()
@@ -175,7 +199,19 @@ impl Window {
         // ---- document
         let doc = DocumentView::new();
         let clamp = adw::ClampScrollable::builder().child(&doc).maximum_size(920).tightening_threshold(640).build();
-        let scroller = gtk::ScrolledWindow::builder().child(&clamp).vexpand(true).build();
+        let scroller = gtk::ScrolledWindow::builder().child(&clamp).vexpand(true).hexpand(true).build();
+        let source = SourceView::new();
+        source.set_extra_menu(Some(&editor::context_menu()));
+        let source_clamp = adw::ClampScrollable::builder().child(&source).maximum_size(920).tightening_threshold(640).build();
+        let source_scroller = gtk::ScrolledWindow::builder().child(&source_clamp).vexpand(true).hexpand(true).build();
+        let paned = gtk::Paned::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .start_child(&source_scroller)
+            .end_child(&scroller)
+            .wide_handle(true)
+            .shrink_start_child(false)
+            .shrink_end_child(false)
+            .build();
 
         let empty = adw::StatusPage::builder()
             .icon_name(APP_ID)
@@ -196,7 +232,7 @@ impl Window {
         let error_page = adw::StatusPage::builder().icon_name("dialog-error-symbolic").title(tr("Unable to Open File")).build();
         let content_stack = gtk::Stack::builder().transition_type(gtk::StackTransitionType::Crossfade).build();
         content_stack.add_named(&empty, Some("empty"));
-        content_stack.add_named(&scroller, Some("doc"));
+        content_stack.add_named(&paned, Some("doc"));
         content_stack.add_named(&pick_page, Some("pick"));
         content_stack.add_named(&error_page, Some("error"));
 
@@ -209,6 +245,11 @@ impl Window {
         toasts.set_child(Some(&content_stack));
         let content = adw::ToolbarView::builder().content(&toasts).top_bar_style(adw::ToolbarStyle::RaisedBorder).build();
         content.add_top_bar(&header);
+        let format_bar = editor::format_bar();
+        format_bar.set_hexpand(true);
+        let format_row = gtk::Box::builder().css_classes(["toolbar"]).visible(false).build();
+        format_row.append(&format_bar);
+        content.add_top_bar(&format_row);
         content.add_top_bar(&search_bar);
         content.add_top_bar(&banner);
 
@@ -244,6 +285,8 @@ impl Window {
         bp.add_setter(&split, "collapsed", Some(&true.to_value()));
         bp.add_setter(&open_btn, "visible", Some(&false.to_value()));
         bp.add_setter(&open_icon_btn, "visible", Some(&true.to_value()));
+        bp.add_setter(&mode_groups[0], "visible", Some(&false.to_value()));
+        bp.add_setter(&mode_groups[1], "visible", Some(&true.to_value()));
         bp.add_setter(&search_button, "visible", Some(&false.to_value())); // still in the menu, Ctrl+F, or just type
         window.add_breakpoint(bp);
 
@@ -260,6 +303,11 @@ impl Window {
             match_label,
             doc,
             scroller,
+            source,
+            source_scroller,
+            paned,
+            format_row,
+            mode_groups,
             content_stack,
             error_page,
             banner,
@@ -280,6 +328,13 @@ impl Window {
             match_index: Cell::new(-1),
             total_words: Cell::new(0),
             style_handlers: RefCell::new(vec![]),
+            mode: Cell::new(EditorMode::from_name(&st.mode).unwrap_or(EditorMode::Format)),
+            disk: RefCell::new(None),
+            dirty: Cell::new(false),
+            save_source: RefCell::new(None),
+            render_source: RefCell::new(None),
+            heading_offsets: RefCell::new(vec![]),
+            conflict_open: Cell::new(false),
         });
         WINDOWS.with(|w| w.borrow_mut().push(this.clone()));
         this.connect_signals(&prev_b, &next_b);
@@ -287,6 +342,7 @@ impl Window {
         this.update_nav();
         this.refresh_banner();
         this.apply_zoom();
+        this.set_mode(this.mode.get());
         this
     }
 
@@ -329,6 +385,45 @@ impl Window {
             }
         });
         self.scroller.vadjustment().connect_value_changed(with!(|w: &Rc<Window>| w.on_scrolled()));
+        self.source_scroller.vadjustment().connect_value_changed(with!(|w: &Rc<Window>| w.on_source_scrolled()));
+        self.source.connect_edited({
+            let weak = weak.clone();
+            move || {
+                if let Some(w) = weak.upgrade() {
+                    w.on_edited();
+                }
+            }
+        });
+        self.source.connect_formats_changed({
+            let weak = weak.clone();
+            move || {
+                if let Some(w) = weak.upgrade() {
+                    w.update_format_state();
+                }
+            }
+        });
+        self.source.buffer().connect_mark_set({
+            let weak = weak.clone();
+            move |buf, _, mark| {
+                if mark == &buf.get_insert() || mark == &buf.selection_bound() {
+                    if let Some(w) = weak.upgrade() {
+                        w.queue_stats();
+                    }
+                }
+            }
+        });
+        for group in &self.mode_groups {
+            group.connect_active_name_notify({
+                let weak = weak.clone();
+                move |g| {
+                    let (Some(w), Some(name)) = (weak.upgrade(), g.active_name()) else { return };
+                    match EditorMode::from_name(&name) {
+                        Some(mode) if mode != w.mode.get() => w.set_mode(mode),
+                        _ => {}
+                    }
+                }
+            });
+        }
 
         self.search_entry.connect_search_changed(with!(|w: &Rc<Window>| w.on_search_changed()));
         self.search_entry.connect_activate(with!(|w: &Rc<Window>| w.step_match(1)));
@@ -370,14 +465,13 @@ impl Window {
             let weak = weak.clone();
             move |_: &adw::StyleManager| {
                 if let Some(w) = weak.upgrade() {
-                    if w.current.borrow().is_some() {
-                        w.reload();
-                    }
+                    w.restyle();
                 }
             }
         };
         self.style_handlers.replace(vec![
             sm.connect_dark_notify(restyle.clone()),
+            sm.connect_high_contrast_notify(restyle.clone()),
             sm.connect_accent_color_notify(restyle),
         ]);
 
@@ -385,6 +479,9 @@ impl Window {
             let weak = weak.clone();
             move |_| {
                 if let Some(w) = weak.upgrade() {
+                    if !w.can_close() {
+                        return glib::Propagation::Stop;
+                    }
                     w.on_close();
                 }
                 glib::Propagation::Proceed
@@ -424,7 +521,47 @@ impl Window {
         add("show-in-files", |w| w.show_in_files());
         add("copy-path", |w| w.copy_path());
         add("close", |w| w.window.close());
-        add("top", |w| w.scroller.vadjustment().set_value(0.0));
+        add("top", |w| {
+            if w.source.has_focus() {
+                w.source.reveal(0);
+            } else {
+                w.scroller.vadjustment().set_value(0.0);
+            }
+        });
+        add("save", |w| {
+            w.flush_save();
+        });
+        add(Insert::Table.action(), |w| w.insert_table());
+        add(Insert::HorizontalRule.action(), |w| w.apply_format(&FormatCommand::HorizontalRule));
+
+        let weak = Rc::downgrade(self);
+        let mode = gio::SimpleAction::new_stateful("mode", Some(glib::VariantTy::STRING), &self.mode.get().name().to_variant());
+        mode.connect_activate(move |_, param| {
+            let (Some(w), Some(mode)) = (weak.upgrade(), param.and_then(|p| p.str()).and_then(EditorMode::from_name)) else { return };
+            w.set_mode(mode);
+        });
+        self.actions.add_action(&mode);
+
+        for tool in Toggle::ALL {
+            let action = gio::SimpleAction::new_stateful(tool.action(), None, &false.to_variant());
+            let weak = Rc::downgrade(self);
+            action.connect_activate(move |_, _| {
+                if let Some(w) = weak.upgrade() {
+                    w.run_tool(tool);
+                }
+            });
+            self.actions.add_action(&action);
+        }
+        let weak = Rc::downgrade(self);
+        let style = gio::SimpleAction::new_stateful(STYLE_ACTION, Some(glib::VariantTy::STRING), &"body".to_variant());
+        style.connect_activate(move |action, param| {
+            let (Some(w), Some(name)) = (weak.upgrade(), param.and_then(|p| p.str())) else { return };
+            // Choosing the current style keeps it, as in a word processor.
+            if action.state().and_then(|s| s.str().map(str::to_owned)).as_deref() != Some(name) {
+                w.apply_format(&FormatCommand::Heading(editor::style_level(name)));
+            }
+        });
+        self.actions.add_action(&style);
         self.window.insert_action_group("win", Some(&self.actions));
         self.update_doc_actions();
     }
@@ -438,6 +575,7 @@ impl Window {
         for name in ["reload", "edit", "show-in-files", "copy-path"] {
             self.action(name).set_enabled(has);
         }
+        self.update_editing();
     }
 
     // ============================================================= opening
@@ -526,25 +664,38 @@ impl Window {
     }
 
     pub fn open_file(self: &Rc<Self>, f: &gio::File, push: bool, fragment: Option<String>, keep_side: bool, scroll: f64) {
+        // the edits of the document on screen go to its file before anything else opens
+        if !self.flush_save() {
+            return;
+        }
         let same = self.current.borrow().as_ref().is_some_and(|c| c.equal(f));
         if push && !same {
             if let Some(cur) = self.current.borrow().clone() {
-                self.history.borrow_mut().push((cur, self.scroller.vadjustment().value()));
+                self.history.borrow_mut().push((cur, self.active_scroller().vadjustment().value()));
                 self.forward.borrow_mut().clear();
             }
         }
-        let text = match f.load_contents(gio::Cancellable::NONE) {
-            Ok((bytes, _)) => String::from_utf8_lossy(&bytes).into_owned(),
+        let bytes = match f.load_contents(gio::Cancellable::NONE) {
+            Ok((bytes, _)) => bytes.to_vec(),
             Err(e) => {
-                self.error_page.set_description(Some(&format!("{}\n\n{}", display_path(f), e.message())));
-                self.content_stack.set_visible_child_name("error");
-                self.title.set_title(&basename(f));
-                self.title.set_subtitle("");
+                self.show_error(f, &tr("Unable to Open File"), &format!("{}\n\n{}", display_path(f), e.message()));
                 return;
             }
         };
+        // A file that isn't UTF-8 is never shown or edited, so it can't be written over.
+        let Ok(text) = String::from_utf8(bytes.clone()) else {
+            self.show_error(f, &tr("Invalid Encoding"), &format!(
+                "{}\n\n{}",
+                display_path(f),
+                tr("This file isn't UTF-8 text, so Amoxtli can't show or edit it. It hasn't been changed.")
+            ));
+            return;
+        };
         self.current.replace(Some(f.clone()));
         let parent = f.parent();
+        self.source.set_text(&text);
+        self.disk.replace(Some(bytes));
+        self.dirty.set(false);
 
         // Files panel: the explicit folder if the file lives in it, else the file's directory
         let in_folder = self.folder.borrow().as_ref().is_some_and(|d| f.has_prefix(d));
@@ -561,10 +712,8 @@ impl Window {
         if !same {
             gtk::RecentManager::default().add_item(&f.uri());
         }
-        let name = basename(f);
-        self.title.set_title(&name);
         self.title.set_subtitle(&parent.as_ref().map(display_path).unwrap_or_default());
-        self.window.set_title(Some(&format!("{name} — Amoxtli")));
+        self.update_title();
         self.content_stack.set_visible_child_name("doc");
         if !keep_side && self.folder.borrow().is_none() {
             self.show_side("contents");
@@ -573,17 +722,52 @@ impl Window {
         self.update_doc_actions();
         self.search_bar.set_search_mode(false);
 
+        if self.mode.get().shows_source() && !keep_side {
+            self.source.grab_focus();
+        }
         let this = self.clone();
         match fragment {
             Some(frag) => {
                 glib::idle_add_local_once(move || this.scroll_to_slug(&frag));
             }
-            None => this.restore_scroll(scroll, 0),
+            None => this.restore_scroll(&self.active_scroller().vadjustment(), scroll, 0),
         }
+    }
+
+    fn show_error(self: &Rc<Self>, f: &gio::File, title: &str, description: &str) {
+        self.current.replace(Some(f.clone()));
+        self.disk.replace(None);
+        self.dirty.set(false);
+        self.source.set_text("");
+        self.error_page.set_title(title);
+        self.error_page.set_description(Some(description));
+        self.content_stack.set_visible_child_name("error");
+        self.title.set_title(&basename(f));
+        self.title.set_subtitle("");
+        self.window.set_title(Some(&format!("{} — Amoxtli", basename(f))));
+        self.outline.set_headings(vec![]);
+        self.status_bar.set_visible(false);
+        self.watch(f); // a fixed file opens by itself
+        self.update_doc_actions();
+    }
+
+    /// The scroller of the view the person reads: the source in Source mode, else the formatted one.
+    fn active_scroller(&self) -> &gtk::ScrolledWindow {
+        if self.mode.get() == EditorMode::Source { &self.source_scroller } else { &self.scroller }
+    }
+
+    fn update_title(&self) {
+        let Some(f) = self.current.borrow().clone() else { return };
+        let name = basename(&f);
+        // a dot while edits wait to be written, as GNOME apps show unsaved documents
+        let shown = if self.dirty.get() { format!("• {name}") } else { name };
+        self.title.set_title(&shown);
+        self.window.set_title(Some(&format!("{shown} — Amoxtli")));
     }
 
     fn render(self: &Rc<Self>, text: &str, base: Option<gio::File>) {
         self.doc.render(text, base);
+        self.heading_offsets.replace(crate::document::heading_offsets(text));
         self.outline.set_headings(self.doc.headings());
         self.matches.borrow_mut().clear();
         self.total_words.set(self.doc.count_words(None));
@@ -610,6 +794,9 @@ impl Window {
 
     fn close_document(&self) {
         self.current.replace(None);
+        self.disk.replace(None);
+        self.dirty.set(false);
+        self.source.set_text("");
         if let Some(m) = self.monitor.take() {
             m.cancel();
         }
@@ -620,21 +807,25 @@ impl Window {
     }
 
     fn reload(self: &Rc<Self>) {
+        if self.dirty.get() {
+            self.check_disk(); // never drops edits: asks if the file changed
+            return;
+        }
         let Some(cur) = self.current.borrow().clone() else { return };
-        let value = self.scroller.vadjustment().value();
+        let value = self.active_scroller().vadjustment().value();
         self.open_file(&cur, false, None, true, value);
     }
 
     /// Layout is validated incrementally; retry until the page is tall enough.
-    fn restore_scroll(self: &Rc<Self>, value: f64, tries: u32) {
-        let adj = self.scroller.vadjustment();
+    fn restore_scroll(self: &Rc<Self>, adj: &gtk::Adjustment, value: f64, tries: u32) {
+        let adj = adj.clone();
         if value <= 0.0 {
             adj.set_value(0.0);
             return;
         }
         if adj.upper() - adj.page_size() < value && tries < 20 {
             let this = self.clone();
-            glib::timeout_add_local_once(Duration::from_millis(25), move || this.restore_scroll(value, tries + 1));
+            glib::timeout_add_local_once(Duration::from_millis(25), move || this.restore_scroll(&adj, value, tries + 1));
             return;
         }
         adj.set_value(value);
@@ -660,14 +851,302 @@ impl Window {
             let id = glib::timeout_add_local_once(Duration::from_millis(180), move || {
                 let Some(w) = weak.upgrade() else { return };
                 w.reload_source.replace(None);
-                let exists = w.current.borrow().as_ref().is_some_and(|c| c.query_exists(gio::Cancellable::NONE));
-                if exists {
-                    w.reload();
-                }
+                w.check_disk();
             });
             w.reload_source.replace(Some(id));
         });
         self.monitor.replace(Some(monitor));
+    }
+
+    // ----------------------------------------------------------- editing
+
+    fn set_mode(self: &Rc<Self>, mode: EditorMode) {
+        self.mode.set(mode);
+        self.action("mode").set_state(&mode.name().to_variant());
+        for group in &self.mode_groups {
+            group.set_active_name(Some(mode.name()));
+        }
+        self.source_scroller.set_visible(mode.shows_source());
+        self.scroller.set_visible(mode.shows_format());
+        if mode == EditorMode::Split {
+            let paned = self.paned.clone();
+            glib::idle_add_local_once(move || paned.set_position(paned.width() / 2));
+        }
+        if mode.shows_format() && self.render_source.borrow().is_some() {
+            self.rerender(); // show the latest edits right away
+        }
+        self.update_editing();
+        if mode.shows_source() && self.disk.borrow().is_some() {
+            self.source.grab_focus();
+        }
+        if self.search_bar.is_search_mode() {
+            self.on_search_changed();
+        }
+        self.update_stats();
+    }
+
+    /// The source editor takes edits, and the tools work, only with a readable file open.
+    fn update_editing(&self) {
+        let editable = self.disk.borrow().is_some();
+        self.source.set_editable(editable);
+        self.source.set_cursor_visible(editable);
+        let tools = editable && self.mode.get().shows_source();
+        self.format_row.set_visible(tools);
+        for tool in Toggle::ALL {
+            self.action(tool.action()).set_enabled(tools);
+        }
+        for name in [STYLE_ACTION, Insert::Table.action(), Insert::HorizontalRule.action()] {
+            self.action(name).set_enabled(tools);
+        }
+        self.action("save").set_enabled(editable);
+    }
+
+    fn update_format_state(&self) {
+        let formats = self.source.active_formats();
+        for tool in Toggle::ALL {
+            self.action(tool.action()).set_state(&tool.is_active(&formats).to_variant());
+        }
+        self.action(STYLE_ACTION).set_state(&editor::style_name(&formats).to_variant());
+    }
+
+    fn apply_format(&self, command: &FormatCommand) {
+        self.source.apply_format(command);
+        self.source.grab_focus();
+    }
+
+    fn run_tool(self: &Rc<Self>, tool: Toggle) {
+        if let Some(command) = tool.command() {
+            self.apply_format(&command);
+            return;
+        }
+        let this = self.clone();
+        glib::spawn_future_local(async move {
+            let selected = this.source.selected_text();
+            if let Some((text, destination)) = editor::dialogs::ask_link(&this.window, &selected).await {
+                this.apply_format(&FormatCommand::Link { text, destination });
+            } else {
+                this.source.grab_focus();
+            }
+        });
+    }
+
+    fn insert_table(self: &Rc<Self>) {
+        let this = self.clone();
+        glib::spawn_future_local(async move {
+            match editor::dialogs::ask_table(&this.window).await {
+                Some(dimensions) => this.apply_format(&FormatCommand::Table(dimensions)),
+                None => {
+                    this.source.grab_focus();
+                }
+            }
+        });
+    }
+
+    fn on_edited(self: &Rc<Self>) {
+        if self.disk.borrow().is_none() {
+            return;
+        }
+        if !self.dirty.replace(true) {
+            self.update_title();
+        }
+        // autosave a second after the last edit
+        if let Some(id) = self.save_source.take() {
+            id.remove();
+        }
+        let weak = Rc::downgrade(self);
+        self.save_source.replace(Some(glib::timeout_add_local_once(Duration::from_secs(1), move || {
+            if let Some(w) = weak.upgrade() {
+                w.save_source.replace(None);
+                w.save_now();
+            }
+        })));
+        // the formatted view follows 200 ms after the last edit; the Contents and the word count, 250 ms
+        if let Some(id) = self.render_source.take() {
+            id.remove();
+        }
+        let delay = if self.mode.get().shows_format() { 200 } else { 250 };
+        let weak = Rc::downgrade(self);
+        self.render_source.replace(Some(glib::timeout_add_local_once(Duration::from_millis(delay), move || {
+            if let Some(w) = weak.upgrade() {
+                w.render_source.replace(None);
+                w.rerender();
+            }
+        })));
+    }
+
+    /// Renders the source editor's text again, keeping the formatted view's scroll position.
+    fn rerender(self: &Rc<Self>) {
+        if let Some(id) = self.render_source.take() {
+            id.remove();
+        }
+        if self.disk.borrow().is_none() {
+            return;
+        }
+        let base = self.current.borrow().as_ref().and_then(|f| f.parent());
+        let value = self.scroller.vadjustment().value();
+        self.render(&self.source.text(), base);
+        self.restore_scroll(&self.scroller.vadjustment(), value, 0);
+        if self.search_bar.is_search_mode() && self.mode.get() == EditorMode::Format {
+            self.on_search_changed();
+        }
+    }
+
+    fn restyle(self: &Rc<Self>) {
+        self.source.restyle();
+        if self.disk.borrow().is_some() {
+            self.rerender();
+        }
+    }
+
+    /// Writes pending edits now. `false` when they couldn't be written.
+    fn flush_save(self: &Rc<Self>) -> bool {
+        self.save_now()
+    }
+
+    fn save_now(self: &Rc<Self>) -> bool {
+        if let Some(id) = self.save_source.take() {
+            id.remove();
+        }
+        if !self.dirty.get() {
+            return true;
+        }
+        let (Some(file), Some(disk)) = (self.current.borrow().clone(), self.disk.borrow().clone()) else { return true };
+        let text = self.source.text();
+        if text.as_bytes() == disk.as_slice() {
+            self.dirty.set(false);
+            self.update_title();
+            return true;
+        }
+        // never write over a file that changed in another app
+        if let Ok((bytes, _)) = file.load_contents(gio::Cancellable::NONE) {
+            if bytes.as_ref() != disk.as_slice() {
+                self.resolve_conflict(bytes.to_vec());
+                return false;
+            }
+        }
+        // written to a temporary file and moved into place, so a failure leaves the file whole
+        match file.replace_contents(text.as_bytes(), None, false, gio::FileCreateFlags::NONE, gio::Cancellable::NONE) {
+            Ok(_) => {
+                self.disk.replace(Some(text.into_bytes()));
+                self.dirty.set(false);
+                self.update_title();
+                true
+            }
+            Err(e) => {
+                eprintln!("amoxtli: saving {}: {}", display_path(&file), e.message());
+                self.toast(
+                    &fill(
+                        &tr("Couldn’t save “{name}”. Check that you have permission to change it."),
+                        &[("name", &basename(&file))],
+                    ),
+                    5,
+                );
+                false
+            }
+        }
+    }
+
+    /// Takes in a change made to the file elsewhere: shown right away without edits of
+    /// our own, otherwise the person chooses which version to keep.
+    fn check_disk(self: &Rc<Self>) {
+        let Some(file) = self.current.borrow().clone() else { return };
+        let Some(disk) = self.disk.borrow().clone() else {
+            // the file couldn't be shown: try again, it may have been fixed
+            if file.query_exists(gio::Cancellable::NONE) {
+                self.open_file(&file, false, None, true, 0.0);
+            }
+            return;
+        };
+        let Ok((bytes, _)) = file.load_contents(gio::Cancellable::NONE) else { return };
+        if bytes.as_ref() == disk.as_slice() {
+            return; // our own save, or nothing changed
+        }
+        if self.dirty.get() {
+            self.resolve_conflict(bytes.to_vec());
+            return;
+        }
+        match String::from_utf8(bytes.to_vec()) {
+            Ok(text) => self.load_external(text),
+            Err(_) => {
+                let value = self.active_scroller().vadjustment().value();
+                self.open_file(&file, false, None, true, value);
+            }
+        }
+    }
+
+    /// Shows the file's new text, keeping the caret and both scroll positions.
+    fn load_external(self: &Rc<Self>, text: String) {
+        let (caret, _) = self.source.selection();
+        let source_scroll = self.source_scroller.vadjustment().value();
+        self.source.set_text(&text);
+        self.source.place_cursor_at(caret.min(text.chars().count() as i32));
+        self.disk.replace(Some(text.into_bytes()));
+        self.dirty.set(false);
+        self.update_title();
+        self.rerender();
+        self.restore_scroll(&self.source_scroller.vadjustment(), source_scroll, 0);
+    }
+
+    fn resolve_conflict(self: &Rc<Self>, on_disk: Vec<u8>) {
+        if self.conflict_open.replace(true) {
+            return;
+        }
+        let Some(file) = self.current.borrow().clone() else { return };
+        let readable = String::from_utf8(on_disk.clone()).ok();
+        let dialog = adw::AlertDialog::new(
+            Some(&tr("File Changed on Disk")),
+            Some(&fill(
+                &tr("“{name}” was changed in another app. Which version do you want to keep?"),
+                &[("name", &basename(&file))],
+            )),
+        );
+        if readable.is_some() {
+            dialog.add_response("disk", &tr("Use Disk Version"));
+            dialog.set_response_appearance("disk", adw::ResponseAppearance::Destructive);
+        }
+        dialog.add_response("mine", &tr("Keep Mine"));
+        dialog.set_response_appearance("mine", adw::ResponseAppearance::Suggested);
+        dialog.set_default_response(Some("mine"));
+        dialog.set_close_response("mine");
+        let this = self.clone();
+        glib::spawn_future_local(async move {
+            let response = dialog.choose_future(Some(&this.window)).await;
+            this.conflict_open.set(false);
+            match readable {
+                Some(text) if response == "disk" => this.load_external(text),
+                _ => {
+                    // what is on disk now is what our version replaces
+                    this.disk.replace(Some(on_disk));
+                    this.save_now();
+                }
+            }
+        });
+    }
+
+    /// Writes pending edits before the window closes; if they can't be written, asks first.
+    fn can_close(self: &Rc<Self>) -> bool {
+        if !self.dirty.get() || self.save_now() {
+            return true;
+        }
+        if self.conflict_open.get() {
+            return false;
+        }
+        let name = self.current.borrow().as_ref().map(basename).unwrap_or_default();
+        let dialog = adw::AlertDialog::new(
+            Some(&tr("Unsaved Changes")),
+            Some(&fill(&tr("“{name}” couldn’t be saved. Close it anyway and lose your changes?"), &[("name", &name)])),
+        );
+        dialog.add_responses(&[("cancel", &tr("Cancel")), ("discard", &tr("Discard Changes"))]);
+        dialog.set_response_appearance("discard", adw::ResponseAppearance::Destructive);
+        dialog.set_close_response("cancel");
+        let this = self.clone();
+        glib::spawn_future_local(async move {
+            if dialog.choose_future(Some(&this.window)).await == "discard" {
+                this.dirty.set(false);
+                this.window.close();
+            }
+        });
+        false
     }
 
     // ----------------------------------------------------------- history
@@ -675,7 +1154,7 @@ impl Window {
     fn go_back(self: &Rc<Self>) {
         let Some((f, scroll)) = self.history.borrow_mut().pop() else { return };
         if let Some(cur) = self.current.borrow().clone() {
-            self.forward.borrow_mut().push((cur, self.scroller.vadjustment().value()));
+            self.forward.borrow_mut().push((cur, self.active_scroller().vadjustment().value()));
         }
         self.open_file(&f, false, None, true, scroll);
     }
@@ -683,7 +1162,7 @@ impl Window {
     fn go_forward(self: &Rc<Self>) {
         let Some((f, scroll)) = self.forward.borrow_mut().pop() else { return };
         if let Some(cur) = self.current.borrow().clone() {
-            self.history.borrow_mut().push((cur, self.scroller.vadjustment().value()));
+            self.history.borrow_mut().push((cur, self.active_scroller().vadjustment().value()));
         }
         self.open_file(&f, false, None, true, scroll);
     }
@@ -746,14 +1225,47 @@ impl Window {
     }
 
     fn scroll_to_heading(&self, h: &Heading) {
-        self.doc.scroll_to_mark(&h.mark, 0.0, true, 0.0, 0.0);
+        let mode = self.mode.get();
+        if mode.shows_source() {
+            let index = self.doc.headings().iter().position(|x| x.mark == h.mark);
+            if let Some(&offset) = index.and_then(|i| self.heading_offsets.borrow().get(i).copied()).as_ref() {
+                self.source.reveal(offset);
+            }
+        }
+        if mode.shows_format() {
+            self.doc.scroll_to_mark(&h.mark, 0.0, true, 0.0, 0.0);
+        }
         self.outline.highlight(Some(h));
         if self.split.is_collapsed() {
             self.split.set_show_sidebar(false);
         }
     }
 
+    /// In Source mode the Contents panel follows the source editor's scroll position.
+    fn on_source_scrolled(&self) {
+        if self.mode.get() != EditorMode::Source {
+            return;
+        }
+        let hs = self.doc.headings();
+        let Some(first) = hs.first() else { return };
+        let buf = self.source.buffer();
+        let top = self.source.visible_rect().y() + 60;
+        let offsets = self.heading_offsets.borrow();
+        let mut current = first;
+        for (h, offset) in hs.iter().zip(offsets.iter()) {
+            if self.source.iter_location(&buf.iter_at_offset(*offset)).y() <= top {
+                current = h;
+            } else {
+                break;
+            }
+        }
+        self.outline.highlight(Some(current));
+    }
+
     fn on_scrolled(&self) {
+        if self.mode.get() == EditorMode::Source {
+            return;
+        }
         let hs = self.doc.headings();
         let Some(first) = hs.first() else { return };
         let adj = self.scroller.vadjustment();
@@ -778,12 +1290,22 @@ impl Window {
 
     // ------------------------------------------------------------ search
 
+    /// Search looks in the source while it is on screen, else in the formatted document.
+    fn search_view(&self) -> gtk::TextView {
+        if self.mode.get().shows_source() && self.disk.borrow().is_some() {
+            self.source.clone().upcast()
+        } else {
+            self.doc.clone().upcast()
+        }
+    }
+
     fn clear_matches(&self) {
-        let buf = self.doc.buffer();
-        let (start, end) = buf.bounds();
-        for name in ["match", "match-current"] {
-            if let Some(tag) = buf.tag_table().lookup(name) {
-                buf.remove_tag(&tag, &start, &end);
+        for buf in [self.doc.buffer(), self.source.buffer()] {
+            let (start, end) = buf.bounds();
+            for name in ["match", "match-current"] {
+                if let Some(tag) = buf.tag_table().lookup(name) {
+                    buf.remove_tag(&tag, &start, &end);
+                }
             }
         }
         self.matches.borrow_mut().clear();
@@ -797,7 +1319,8 @@ impl Window {
             self.match_label.set_label("");
             return;
         }
-        let buf = self.doc.buffer();
+        let view = self.search_view();
+        let buf = view.buffer();
         let Some(tag) = buf.tag_table().lookup("match") else { return };
         let mut it = buf.start_iter();
         let flags = gtk::TextSearchFlags::CASE_INSENSITIVE | gtk::TextSearchFlags::TEXT_ONLY;
@@ -812,10 +1335,10 @@ impl Window {
             return;
         }
         // first match after the current scroll position
-        let top = self.scroller.vadjustment().value() as i32;
+        let top = view.visible_rect().y();
         let idx = found
             .iter()
-            .position(|(s, _)| self.doc.iter_location(&buf.iter_at_offset(*s)).y() >= top)
+            .position(|(s, _)| view.iter_location(&buf.iter_at_offset(*s)).y() >= top)
             .unwrap_or(0);
         self.matches.replace(found);
         self.select_match(idx as i32);
@@ -830,7 +1353,8 @@ impl Window {
     }
 
     fn select_match(&self, idx: i32) {
-        let buf = self.doc.buffer();
+        let view = self.search_view();
+        let buf = view.buffer();
         let Some(cur) = buf.tag_table().lookup("match-current") else { return };
         let matches = self.matches.borrow();
         if let Some((s, e)) = matches.get(self.match_index.get().max(0) as usize).filter(|_| self.match_index.get() >= 0) {
@@ -840,7 +1364,7 @@ impl Window {
         let (s, e) = matches[idx as usize];
         let mut si = buf.iter_at_offset(s);
         buf.apply_tag(&cur, &si, &buf.iter_at_offset(e));
-        self.doc.scroll_to_iter(&mut si, 0.15, true, 0.0, 0.35);
+        view.scroll_to_iter(&mut si, 0.15, true, 0.0, 0.35);
         self.match_label.set_label(&fill(
             &tr("{current} of {total}"),
             &[("current", &(idx + 1).to_string()), ("total", &matches.len().to_string())],
@@ -882,10 +1406,13 @@ impl Window {
 
     fn update_stats(&self) {
         let total = self.total_words.get();
-        let buf = self.doc.buffer();
-        match buf.selection_bounds() {
-            Some(range) => {
-                let sel = self.doc.count_words(Some(range));
+        let selected = if self.mode.get().shows_source() && self.source.buffer().has_selection() {
+            Some(crate::document::count_words(&self.source.selected_text()) as u64)
+        } else {
+            self.doc.buffer().selection_bounds().map(|range| self.doc.count_words(Some(range)))
+        };
+        match selected {
+            Some(sel) => {
                 self.words_label.set_label(&fill(
                     &trn("{selected} of {total} word", "{selected} of {total} words", total),
                     &[("selected", &group_digits(sel)), ("total", &group_digits(total))],
@@ -916,12 +1443,15 @@ impl Window {
     }
 
     fn apply_zoom(&self) {
-        for c in self.doc.css_classes() {
-            if c.starts_with("zoom-") {
-                self.doc.remove_css_class(&c);
+        let views: [gtk::Widget; 2] = [self.doc.clone().upcast(), self.source.clone().upcast()];
+        for view in views {
+            for c in view.css_classes() {
+                if c.starts_with("zoom-") {
+                    view.remove_css_class(&c);
+                }
             }
+            view.add_css_class(&format!("zoom-{}", self.zoom.get()));
         }
-        self.doc.add_css_class(&format!("zoom-{}", self.zoom.get()));
     }
 
     // -------------------------------------------------------------- misc
@@ -932,6 +1462,15 @@ impl Window {
             if let Some(h) = self.doc.headings().get(n) {
                 self.scroll_to_heading(h);
             }
+        }
+        if let Some(mode) = std::env::var("AMOXTLI_SNAPSHOT_MODE").ok().as_deref().and_then(EditorMode::from_name) {
+            self.set_mode(mode);
+        }
+        if let Some(n) = std::env::var("AMOXTLI_SNAPSHOT_CARET").ok().and_then(|n| n.parse::<i32>().ok()) {
+            self.source.place_cursor_at(n);
+        }
+        if std::env::var("AMOXTLI_SELFTEST").is_ok() {
+            self.self_test();
         }
         if std::env::var("AMOXTLI_SNAPSHOT_EXPAND").is_ok() {
             self.files.expand_top_level();
@@ -960,6 +1499,94 @@ impl Window {
             let buf = self.doc.buffer();
             buf.select_range(&buf.start_iter(), &buf.iter_at_offset(n));
         }
+    }
+
+    /// Drives the editor the way typing would, and checks the file on disk. It writes to the
+    /// open file: run it on a scratch copy.
+    #[cfg(debug_assertions)]
+    fn self_test(self: &Rc<Self>) {
+        use crate::markdown::syntax;
+        let mut failures = 0;
+        let mut check = |name: &str, ok: bool, detail: String| {
+            println!("{} {name}{}", if ok { "PASS" } else { "FAIL" }, if ok { String::new() } else { format!(": {detail}") });
+            failures += usize::from(!ok);
+        };
+        self.set_mode(EditorMode::Source);
+        let src = self.source.clone();
+        let buf = src.buffer();
+        let type_text = |t: &str| {
+            buf.insert_interactive_at_cursor(t, true);
+        };
+        let load = |t: &str| {
+            src.set_text(t);
+            buf.place_cursor(&buf.end_iter());
+        };
+
+        load("1. uno");
+        src.press_return();
+        type_text("dos");
+        src.press_return();
+        src.press_return();
+        type_text("fin");
+        check("return continues and ends a list", src.text() == "1. uno\n2. dos\nfin", src.text());
+
+        load("");
+        src.apply_format(&FormatCommand::BulletList);
+        type_text("uno");
+        src.press_return();
+        type_text("dos");
+        check("list started with the tool continues", src.text() == "- uno\n- dos", src.text());
+
+        load("> - ");
+        check("empty item in a quote", src.press_return() && src.text() == "> ", src.text());
+        load("```\n- code");
+        check("return in a code block is a line break", !src.press_return(), src.text());
+
+        load("hola");
+        buf.select_range(&buf.start_iter(), &buf.end_iter());
+        src.apply_format(&FormatCommand::Bold);
+        let bold = src.text();
+        buf.undo();
+        check("a tool is one undo step", bold == "**hola**" && src.text() == "hola", format!("{bold:?} then {:?}", src.text()));
+        check("undo can't go back past opening", { buf.undo(); src.text() == "hola" }, src.text());
+
+        let code = buf.tag_table().lookup("code").unwrap();
+        load("a\n*x*\nb");
+        let mut start = buf.start_iter();
+        buf.insert(&mut start, "```\n");
+        let x_line = buf.iter_at_line(2).unwrap();
+        check("opening a fence styles what follows", x_line.has_tag(&code), String::new());
+        let (mut s, mut e) = (buf.start_iter(), buf.iter_at_line(1).unwrap());
+        buf.delete(&mut s, &mut e);
+        let x_line = buf.iter_at_line(1).unwrap();
+        check("removing the fence restyles what follows", !x_line.has_tag(&code), String::new());
+        check("fence helper agrees", syntax::is_fence("```rust"), String::new());
+
+        let marker = buf.tag_table().lookup("list-marker").unwrap();
+        load("# T\n\n## L\n\n- one\n- two");
+        let first = buf.iter_at_line(4).unwrap();
+        let second = buf.iter_at_line(5).unwrap();
+        check("every list marker is colored", first.has_tag(&marker) && second.has_tag(&marker),
+            format!("{} {}", first.has_tag(&marker), second.has_tag(&marker)));
+
+        load("a **bold** b");
+        src.place_cursor_at(5);
+        let f = src.active_formats();
+        check("active formats at the caret", f.strong && !f.emphasis, format!("{f:?}"));
+
+        // saving: written atomically, and never over a file changed elsewhere
+        let Some(file) = self.current.borrow().clone() else { return };
+        let read = || file.load_contents(gio::Cancellable::NONE).map(|(b, _)| String::from_utf8_lossy(&b).into_owned()).unwrap_or_default();
+        load("before");
+        self.disk.replace(Some(read().into_bytes()));
+        type_text(" edited");
+        check("typing marks the document edited", self.dirty.get(), String::new());
+        check("save writes the file", self.flush_save() && read() == "before edited" && !self.dirty.get(), read());
+        let _ = std::fs::write(file.path().unwrap(), "changed elsewhere");
+        type_text("!");
+        check("a changed file isn't written over", !self.save_now() && read() == "changed elsewhere" && self.conflict_open.get(), read());
+        self.dirty.set(false);
+        println!("self-test: {failures} failed");
     }
 
     fn show_side(&self, name: &str) {
@@ -1022,6 +1649,7 @@ impl Window {
             st.banner_dismissed = true; // only nag once
         }
         st.zoom = self.zoom.get();
+        st.mode = self.mode.get().name().into();
         st.sidebar = self.split.shows_sidebar();
         st.maximized = self.window.is_maximized();
         if !st.maximized {
@@ -1037,8 +1665,36 @@ impl Window {
         if let Some(m) = self.monitor.take() {
             m.cancel();
         }
+        for source in [self.render_source.take(), self.save_source.take(), self.reload_source.take()].into_iter().flatten() {
+            source.remove();
+        }
         let me = self.window.clone();
         WINDOWS.with(|w| w.borrow_mut().retain(|x| x.window != me));
+    }
+}
+
+/// The Source / Format / Split selector, with labels or, for narrow windows, icons.
+fn mode_toggles(icons: bool) -> adw::ToggleGroup {
+    let group = adw::ToggleGroup::builder().valign(gtk::Align::Center).build();
+    let modes = [
+        (EditorMode::Source, tr("Source"), "amoxtli-source-symbolic", tr("Show the Markdown source")),
+        (EditorMode::Format, tr("Format"), "format-text-rich-symbolic", tr("Show the formatted document")),
+        (EditorMode::Split, tr("Split"), "view-dual-symbolic", tr("Show the source and the formatted document side by side")),
+    ];
+    for (mode, label, icon, help) in modes {
+        let keys = editor::accel_label(mode_accel(mode)).unwrap_or_default();
+        let toggle = adw::Toggle::builder().name(mode.name()).tooltip(format!("{help} ({keys})"));
+        let toggle = if icons { toggle.icon_name(icon) } else { toggle.label(label) };
+        group.add(toggle.build());
+    }
+    group
+}
+
+pub fn mode_accel(mode: EditorMode) -> &'static str {
+    match mode {
+        EditorMode::Source => "<Ctrl><Alt>3",
+        EditorMode::Format => "<Ctrl><Alt>4",
+        EditorMode::Split => "<Ctrl><Alt>5",
     }
 }
 

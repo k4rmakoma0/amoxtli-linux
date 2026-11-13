@@ -7,7 +7,8 @@ rm -f "$PREFIX/bin/amoxtli" \
   "$PREFIX/share/applications/$APP_ID.desktop" \
   "$PREFIX/share/metainfo/$APP_ID.metainfo.xml" \
   "$PREFIX/share/icons/hicolor/scalable/apps/$APP_ID.svg" \
-  "$PREFIX/share/icons/hicolor/symbolic/apps/$APP_ID-symbolic.svg"
+  "$PREFIX/share/icons/hicolor/symbolic/apps/$APP_ID-symbolic.svg" \
+  "$PREFIX"/share/icons/hicolor/scalable/actions/amoxtli-*-symbolic.svg
 for mo in "$PREFIX"/share/locale/*/LC_MESSAGES/amoxtli.mo; do
   [ -e "$mo" ] && rm -f "$mo"
 done

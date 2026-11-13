@@ -354,6 +354,35 @@ impl DocumentView {
     }
 }
 
+/// The Markdown extensions the renderer understands.
+pub fn parser_options() -> Options {
+    let mut opts = Options::ENABLE_TABLES
+        | Options::ENABLE_STRIKETHROUGH
+        | Options::ENABLE_TASKLISTS
+        | Options::ENABLE_FOOTNOTES
+        | Options::ENABLE_SMART_PUNCTUATION
+        | Options::ENABLE_HEADING_ATTRIBUTES
+        | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
+        | Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS;
+    opts.insert(Options::ENABLE_GFM);
+    opts
+}
+
+/// Where each heading starts in the source, in characters, in the order `headings()` lists
+/// them, so the source editor can go to the one picked in the Contents panel.
+pub fn heading_offsets(source: &str) -> Vec<i32> {
+    let mut offsets = vec![];
+    let (mut byte, mut chars) = (0, 0);
+    for (event, range) in Parser::new_ext(source, parser_options()).into_offset_iter() {
+        if let Event::Start(Tag::Heading { .. }) = event {
+            chars += source[byte..range.start].chars().count();
+            byte = range.start;
+            offsets.push(chars as i32);
+        }
+    }
+    offsets
+}
+
 pub fn alert_color(kind: BlockQuoteKind, dark: bool) -> gdk::RGBA {
     let hex = match (kind, dark) {
         (BlockQuoteKind::Note, false) => "#0969da",
@@ -831,16 +860,7 @@ impl<'a> Renderer<'a> {
     // ------------------------------------------------------------- events
 
     fn run(&mut self, source: &str) {
-        let mut opts = Options::ENABLE_TABLES
-            | Options::ENABLE_STRIKETHROUGH
-            | Options::ENABLE_TASKLISTS
-            | Options::ENABLE_FOOTNOTES
-            | Options::ENABLE_SMART_PUNCTUATION
-            | Options::ENABLE_HEADING_ATTRIBUTES
-            | Options::ENABLE_YAML_STYLE_METADATA_BLOCKS
-            | Options::ENABLE_PLUSES_DELIMITED_METADATA_BLOCKS;
-        opts.insert(Options::ENABLE_GFM);
-        for event in Parser::new_ext(source, opts) {
+        for event in Parser::new_ext(source, parser_options()) {
             self.event(event);
         }
         self.close_implicit();
@@ -1365,6 +1385,12 @@ mod tests {
         assert_eq!(count_words("Hello, world! It's a well-known fact — 42 times."), 8);
         assert_eq!(count_words("  "), 0);
         assert_eq!(count_words("año ñandú"), 2);
+    }
+
+    #[test]
+    fn heading_offsets_skip_code() {
+        let text = "# Uno\n\ntexto ñ\n\n```\n# no\n```\n## Dos\nSetext\n---";
+        assert_eq!(heading_offsets(text), vec![0, 29, 36]);
     }
 
     #[test]

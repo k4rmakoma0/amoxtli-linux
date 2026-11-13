@@ -23,6 +23,10 @@ Pango-shaped text in a `GtkTextView`, tables as `GtkGrid`s, images as GPU textur
 ## Features
 
 - Open files (`Ctrl+O`), folders (`Ctrl+Shift+O`), drag & drop, or `amoxtli file.md|folder`
+- Edit the Markdown source with live highlighting: **Source**, **Format** and **Split** views
+  (`Ctrl+Alt+3/4/5`), formatting tools (`Ctrl+B`, `Ctrl+I`, `Ctrl+1…6` for headings, `Ctrl+K` for links…),
+  lists and quotes that continue on Return. Edits are saved a second after you stop typing (or `Ctrl+S`),
+  and never over a file another app changed: Amoxtli asks which version to keep
 - **Contents** sidebar: the document's table of contents, follows your scroll position
 - **Files** sidebar: lazy folder tree that shows only Markdown files and directories
 - Opening a folder shows its `README.md` / `index.md` automatically
@@ -125,6 +129,8 @@ src/main.rs          entry point
 src/application.rs   Adw.Application: actions, shortcuts, CSS, file opening
 src/window.rs        main window: header bar, split view, search, history, reload, status bar
 src/document.rs      Markdown (pulldown-cmark) → native GtkTextView renderer
+src/markdown/        GTK-free editing logic: syntax scanner, formatting tools, Return in lists (tested)
+src/editor/          source editor, formatting toolbar and menus, link/table dialogs
 src/widgets.rs       FitImage / FitBox helper widgets
 src/sidebar.rs       outline (index) and folder tree panels
 src/i18n.rs          gettext setup
@@ -134,7 +140,7 @@ tools/i18n.py        extract / merge / compile / check translations
 tools/package.sh     build the prebuilt release tarball into dist/
 tools/flatpak-cargo-sources.py  offline crate sources for the Flatpak build
 build-aux/flatpak/   Flatpak manifest and Flathub submission notes
-data/                .desktop entry, AppStream metainfo, icons
+data/                .desktop entry, AppStream metainfo, app and toolbar icons
 ```
 
 ## License

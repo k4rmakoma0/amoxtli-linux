@@ -7,6 +7,8 @@
 //! AMOXTLI_SNAPSHOT_SEARCH=text     open the search bar with this text
 //! AMOXTLI_SNAPSHOT_SELECT=n        select the first n characters
 //! AMOXTLI_SNAPSHOT_EXPAND=1        expand top-level folders in the Files panel
+//! AMOXTLI_SNAPSHOT_MODE=split      editor mode: source, format or split
+//! AMOXTLI_SNAPSHOT_CARET=n         put the source editor's caret at character n
 
 use adw::prelude::*;
 use gtk::{glib, graphene};

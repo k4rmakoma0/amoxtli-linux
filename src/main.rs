@@ -5,7 +5,9 @@ mod config;
 #[cfg(debug_assertions)]
 mod devtools;
 mod document;
+mod editor;
 mod i18n;
+mod markdown;
 mod sidebar;
 mod widgets;
 mod window;
