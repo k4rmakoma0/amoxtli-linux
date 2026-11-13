@@ -4,16 +4,16 @@
 **Rust** with **GTK 4 + libadwaita** so it looks and behaves like a first-class GNOME app.
 It ships as a single ~4 MB binary.
 
-![Amoxtli showing a Markdown document with its table of contents](data/screenshots/light.png)
+![The formatted editor, with its formatting tools and the table of contents](data/screenshots/light.png)
 
 <table>
   <tr>
-    <td><img src="data/screenshots/dark.png" alt="Dark mode with alerts, syntax-highlighted code and a table"></td>
-    <td><img src="data/screenshots/folder.png" alt="Browsing a folder of Markdown notes"></td>
+    <td><img src="data/screenshots/dark.png" alt="The split view in dark mode: Markdown source and formatted document side by side"></td>
+    <td><img src="data/screenshots/folder.png" alt="Editing the Markdown source in a folder of notes"></td>
   </tr>
   <tr>
-    <td align="center">Dark mode, alerts, code and tables</td>
-    <td align="center">Browse a whole folder of notes</td>
+    <td align="center">Source and formatted view side by side</td>
+    <td align="center">The source, in a folder of notes</td>
   </tr>
 </table>
 
@@ -72,8 +72,8 @@ you can also get a single-file Flatpak bundle (no automatic updates):
 **Prebuilt binary** (needs GTK ≥ 4.20 and libadwaita ≥ 1.8, i.e. GNOME 49+):
 
 ```sh
-tar xzf amoxtli-1.1.0-x86_64-linux.tar.gz
-cd amoxtli-1.1.0-x86_64-linux
+tar xzf amoxtli-2.0.0-x86_64-linux.tar.gz
+cd amoxtli-2.0.0-x86_64-linux
 ./install.sh            # or ./install.sh --default to make it your Markdown app
 ```
 

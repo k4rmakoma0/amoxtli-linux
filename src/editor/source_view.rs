@@ -330,6 +330,7 @@ impl SourceView {
         tag("strike").set_strikethrough(true);
         let code = tag("code");
         code.set_family(Some("monospace"));
+        code.set_insert_hyphens(false);
         code.set_background_rgba(Some(&code_bg));
         tag("link").set_foreground_rgba(Some(&accent));
         tag("list-marker").set_foreground_rgba(Some(&accent));

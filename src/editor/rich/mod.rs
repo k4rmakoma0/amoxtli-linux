@@ -379,7 +379,7 @@ impl RichView {
             .pixels_below_lines(look.below)
             .build();
         if look.code {
-            t.set_wrap_mode(gtk::WrapMode::Char);
+            t.set_wrap_mode(gtk::WrapMode::WordChar);
         }
         self.add_tag(&t);
         t
@@ -408,9 +408,14 @@ impl RichView {
         let raw = self.tag("raw");
         raw.set_foreground_rgba(Some(&dim));
         raw.set_family(Some("monospace"));
-        self.tag("code-line").set_family(Some("monospace"));
+        // code wraps where it must, without the hyphens Pango adds to broken words
+        let code_line = self.tag("code-line");
+        code_line.set_family(Some("monospace"));
+        code_line.set_insert_hyphens(false);
+        self.tag("code").set_insert_hyphens(false);
         let raw_line = self.tag("raw-line");
         raw_line.set_family(Some("monospace"));
+        raw_line.set_insert_hyphens(false);
         raw_line.set_foreground_rgba(Some(&dim));
         self.tag("quoted").set_foreground_rgba(Some(&dim));
         for kind in TokenKind::ALL {

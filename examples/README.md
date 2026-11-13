@@ -3,7 +3,7 @@ title: front matter is hidden
 ---
 # Amoxtli Sample
 
-Welcome to **Amoxtli**, a *native* Markdown viewer. It supports `inline code`, ~~strikethrough~~,
+Welcome to **Amoxtli**, a *native* Markdown editor. It supports `inline code`, ~~strikethrough~~,
 [external links](https://gnome.org), [links to sections](#tables), and [other files](notes/guide.md).
 Line one with a hard break  
 line two. Footnotes work as well.[^1]
