@@ -4,3 +4,10 @@ dist/
 build-dir/
 repo/
 .flatpak-builder/
+/parts/
+/stage/
+/prime/
+/.snapcraft/
+/.craft/
+/*.snap
+/*.snap-build-assertion

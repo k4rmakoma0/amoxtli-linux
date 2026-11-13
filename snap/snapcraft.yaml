@@ -1,0 +1,51 @@
+name: amoxtli
+title: Amoxtli
+base: core26
+version: '2.0.0'
+summary: Write and read Markdown documents and notes
+description: |
+  Amoxtli is a native Markdown editor for Linux. Edit the Markdown source,
+  a formatted document, or both side by side with synchronized scrolling.
+  It includes formatting tools, editable tables, code highlighting, a folder
+  browser, a table of contents, automatic saving and ten translations.
+
+  Amoxtli means "book" in Nahuatl.
+grade: stable
+confinement: strict
+license: MIT
+website: https://github.com/k4rmakoma0/amoxtli-linux
+issues: https://github.com/k4rmakoma0/amoxtli-linux/issues
+contact: https://github.com/k4rmakoma0/amoxtli-linux/issues
+source-code: https://github.com/k4rmakoma0/amoxtli-linux
+icon: data/icons/hicolor/scalable/apps/dev.alananaya.Amoxtli.svg
+
+platforms:
+  amd64:
+
+apps:
+  amoxtli:
+    command: usr/bin/amoxtli
+    desktop: usr/share/applications/dev.alananaya.Amoxtli.desktop
+    common-id: dev.alananaya.Amoxtli
+    extensions: [gnome]
+    plugs: [home, network, removable-media]
+    slots: [amoxtli]
+
+slots:
+  amoxtli:
+    interface: dbus
+    bus: session
+    name: dev.alananaya.Amoxtli
+
+parts:
+  amoxtli:
+    plugin: rust
+    source: .
+    rust-channel: stable
+    build-packages: [build-essential, pkg-config, gettext, python3]
+    override-build: |
+      craftctl default
+      build-aux/snap/install.sh "$CRAFT_PART_INSTALL/bin/amoxtli" "$CRAFT_PART_INSTALL"
+      rm "$CRAFT_PART_INSTALL/bin/amoxtli"
+      rmdir "$CRAFT_PART_INSTALL/bin"
+      rm -f "$CRAFT_PART_INSTALL/.crates.toml" "$CRAFT_PART_INSTALL/.crates2.json"

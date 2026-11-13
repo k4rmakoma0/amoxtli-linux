@@ -2426,7 +2426,7 @@ impl Window {
     pub fn refresh_banner(&self) {
         let st = State::load();
         // a sandboxed app can't change the host's default apps
-        let installed = !config::is_flatpak() && config::desktop_app_info().is_some();
+        let installed = !config::is_sandboxed() && config::desktop_app_info().is_some();
         let is_default = gio::AppInfo::default_for_type("text/markdown", false)
             .and_then(|a| a.id())
             .is_some_and(|id| id == format!("{APP_ID}.desktop"));
@@ -2435,7 +2435,7 @@ impl Window {
 
     fn edit_externally(&self) {
         let Some(cur) = self.current.borrow().clone() else { return };
-        if config::is_flatpak() {
+        if config::is_sandboxed() {
             // host apps aren't visible in the sandbox: let the portal show the app chooser
             let launcher = gtk::FileLauncher::new(Some(&cur));
             launcher.set_always_ask(true);
@@ -2545,7 +2545,7 @@ fn main_menu() -> gio::Menu {
         (tr("Copy File Path"), "win.copy-path"),
     ]);
     let mut last = vec![(tr("Keyboard Shortcuts"), "app.shortcuts"), (tr("About Amoxtli"), "app.about")];
-    if !config::is_flatpak() {
+    if !config::is_sandboxed() {
         last.insert(0, (tr("Set as Default Markdown App"), "app.make-default"));
     }
     section(&last);

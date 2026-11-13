@@ -55,6 +55,16 @@ Pango-shaped text in a `GtkTextView`, tables as grids of editable cells, images 
 
 ## Download
 
+**Snap Store (Ubuntu and other distributions with snapd):** install
+[Amoxtli from the Snap Store](https://snapcraft.io/amoxtli), or run:
+
+```sh
+sudo snap install amoxtli
+```
+
+Launch it from your app menu or with `amoxtli`. Updates arrive automatically
+through the Snap Store.
+
 **Flatpak repository (recommended, with automatic updates):** open
 <https://k4rmakoma0.github.io/amoxtli-linux/> and click **Install**, or run:
 
@@ -79,6 +89,9 @@ cd amoxtli-2.0.0-x86_64-linux
 
 Or build it from source as described below. The Flatpak manifest lives in
 [`build-aux/flatpak`](build-aux/flatpak/README.md).
+
+To build and test a strictly confined Snap package, see the
+[Snap packaging instructions](build-aux/snap/README.md).
 
 ## Requirements
 

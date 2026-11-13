@@ -14,6 +14,13 @@ pub fn is_flatpak() -> bool {
     std::path::Path::new("/.flatpak-info").exists()
 }
 
+/// Packaged apps use portals instead of changing host associations or looking
+/// up host executables. Match our snap name so an inherited environment from a
+/// different snapped application doesn't affect native development builds.
+pub fn is_sandboxed() -> bool {
+    is_flatpak() || std::env::var("SNAP_NAME").is_ok_and(|name| name == "amoxtli")
+}
+
 /// The install prefix when running an installed binary (`<prefix>/bin/amoxtli`).
 fn install_prefix() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?.canonicalize().ok()?;
