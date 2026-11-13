@@ -36,12 +36,12 @@ impl ReadingFont {
     }
 
     pub fn label(self) -> String {
-        tr(match self {
-            Self::System => "System",
-            Self::Serif => "Serif",
-            Self::Monospace => "Monospace",
-            Self::Rounded => "Rounded",
-        })
+        match self {
+            Self::System => tr("System"),
+            Self::Serif => tr("Serif"),
+            Self::Monospace => tr("Monospace"),
+            Self::Rounded => tr("Rounded"),
+        }
     }
 
     /// The CSS family; `None` keeps the interface font. `installed` lists the font families
@@ -80,7 +80,7 @@ impl TextSize {
         Self(step)
     }
 
-    /// The size closest to a zoom percentage of the 1.x viewer.
+    /// The size closest to a zoom percentage of Amoxtli 1.x.
     pub fn from_zoom(percent: i32) -> Self {
         Self::nearest((percent * Self::STANDARD.0 + 50) / 100)
     }

@@ -1,6 +1,6 @@
-# Amoxtli
+# Amoxtli: Markdown Editor
 
-*Amoxtli* (“book” in Nahuatl) is a native Markdown viewer for Linux, written in
+*Amoxtli* (“book” in Nahuatl) is a native Markdown editor for Linux, written in
 **Rust** with **GTK 4 + libadwaita** so it looks and behaves like a first-class GNOME app.
 It ships as a single ~4 MB binary.
 
@@ -33,11 +33,13 @@ Pango-shaped text in a `GtkTextView`, tables as grids of editable cells, images 
   HTML/XML, CSS, SQL and Shell, with a small hand-written lexer); in the formatted view, a chip on each
   block shows its language and changes it
 - Opening a file never rewrites it. Edits are saved a second after you stop typing (or `Ctrl+S`), and
-  never over a file another app changed: Amoxtli asks which version to keep
+  never over a file another app changed: Amoxtli asks which version to keep. A renamed file is followed;
+  a deleted one is never brought back unasked
+- Documents over 1 MB are edited in the source, which stays fast at that size
 - **Contents** sidebar: the document's table of contents, follows your scroll position
 - **Files** sidebar: lazy folder tree that shows only Markdown files and directories
 - Opening a folder shows its `README.md` / `index.md` automatically
-- Live reload when the file changes on disk (keeps your scroll position)
+- Live reload when the file changes on disk (keeps your caret and scroll position)
 - Relative links between `.md` files, `#heading` anchors, back/forward history (`Alt+←/→`)
 - CommonMark + tables, task lists, strikethrough, GitHub alerts (`> [!NOTE]`), `{#custom-id}` heading
   anchors, `<u>` underline, local and remote images (PNG/JPEG/SVG/GIF/WebP). HTML blocks, footnotes and
@@ -49,7 +51,7 @@ Pango-shaped text in a `GtkTextView`, tables as grids of editable cells, images 
 - Can register itself as the default app for `text/markdown`
 - Word count and reading time in the status bar (or for the selected text)
 - Translated into Spanish, Portuguese (Brazil), French, German, Italian, Russian,
-  Chinese (Simplified), Japanese and Korean — follows the system language
+  Chinese (Simplified and Traditional), Japanese and Korean — follows the system language
 
 ## Download
 
@@ -72,7 +74,7 @@ you can also get a single-file Flatpak bundle (no automatic updates):
 ```sh
 tar xzf amoxtli-1.1.0-x86_64-linux.tar.gz
 cd amoxtli-1.1.0-x86_64-linux
-./install.sh            # or ./install.sh --default to make it your Markdown viewer
+./install.sh            # or ./install.sh --default to make it your Markdown app
 ```
 
 Or build it from source as described below. The Flatpak manifest lives in
@@ -107,7 +109,7 @@ cargo build --release && sudo PREFIX=/usr/local ./install.sh   # system-wide
 ./uninstall.sh
 ```
 
-You can also make it the default later from the app menu (**Set as Default Markdown Viewer**),
+You can also make it the default later from the app menu (**Set as Default Markdown App**),
 from GNOME Settings → Apps → Default Apps, or with:
 
 ```sh

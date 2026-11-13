@@ -366,3 +366,49 @@ impl RichView {
             .collect()
     }
 }
+
+impl RichView {
+    /// What a screen reader hears for the list item at the caret: its bullet or number and its
+    /// level. They are drawn, not text, so the reader can't see them otherwise. `None` outside lists.
+    pub fn list_item_announcement(&self) -> Option<String> {
+        use crate::i18n::{fill, tr};
+        let line = self.caret_line();
+        let kind = self.kind_at_caret();
+        let (depth, item) = kind.containers.iter().enumerate().rev().find_map(|(d, c)| c.list_item().map(|i| (d, *i)))?;
+        let level = kind.containers[..=depth].iter().filter(|c| c.list_item().is_some()).count();
+        // the item's marker is on the line that starts it
+        let markers = self.line_markers();
+        let mut l = line;
+        let marker = loop {
+            if let Some(m) = markers.get(l as usize).and_then(|ms| ms.iter().find(|m| m.depth == depth)) {
+                break Some(m.clone());
+            }
+            if l == 0 || self.kind_at_line(l - 1).containers.get(depth) != kind.containers.get(depth) {
+                break None;
+            }
+            l -= 1;
+        }?;
+        let level = level.to_string();
+        Some(match (item.ordered, item.task) {
+            (_, Some(true)) => fill(&tr("Task, done, level {level}"), &[("level", &level)]),
+            (_, Some(false)) => fill(&tr("Task, not done, level {level}"), &[("level", &level)]),
+            (true, None) => fill(&tr("{number}, level {level}"), &[("number", marker.text.trim_end_matches('.')), ("level", &level)]),
+            (false, None) => fill(&tr("Bullet, level {level}"), &[("level", &level)]),
+        })
+    }
+
+    /// Announces the list item at the caret when it changes, as the caret moves or edits renumber it.
+    pub(super) fn announce_list_item(&self) {
+        if !self.has_focus() {
+            return;
+        }
+        let message = self.list_item_announcement();
+        if *self.imp().announced.borrow() == message {
+            return;
+        }
+        if let Some(m) = &message {
+            self.announce(m, gtk::AccessibleAnnouncementPriority::Medium);
+        }
+        self.imp().announced.replace(message);
+    }
+}

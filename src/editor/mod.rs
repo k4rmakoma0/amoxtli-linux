@@ -12,6 +12,15 @@ use crate::markdown::format::FormatCommand;
 use gtk::gio;
 use gtk::prelude::*;
 
+/// The formatted editor builds the whole document at once and writes all of its Markdown
+/// on every edit, so past a size it would freeze the app. Larger documents are edited in the
+/// source, which only restyles the lines that change. In UTF-8 bytes, as on disk.
+pub const FORMATTED_LIMIT: usize = 1_000_000;
+
+pub fn fits_formatted(text: &str) -> bool {
+    text.len() <= FORMATTED_LIMIT
+}
+
 /// How a window shows the document: as Markdown source, formatted, or both side by side.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum EditorMode {
@@ -92,18 +101,18 @@ impl Toggle {
     }
 
     pub fn label(self) -> String {
-        tr(match self {
-            Self::Bold => "Bold",
-            Self::Italic => "Italic",
-            Self::Underline => "Underline",
-            Self::Strikethrough => "Strikethrough",
-            Self::InlineCode => "Code",
-            Self::BulletList => "Bulleted List",
-            Self::NumberedList => "Numbered List",
-            Self::Quote => "Quote",
-            Self::Link => "Link…",
-            Self::CodeBlock => "Code Block",
-        })
+        match self {
+            Self::Bold => tr("Bold"),
+            Self::Italic => tr("Italic"),
+            Self::Underline => tr("Underline"),
+            Self::Strikethrough => tr("Strikethrough"),
+            Self::InlineCode => tr("Code"),
+            Self::BulletList => tr("Bulleted List"),
+            Self::NumberedList => tr("Numbered List"),
+            Self::Quote => tr("Quote"),
+            Self::Link => tr("Link…"),
+            Self::CodeBlock => tr("Code Block"),
+        }
     }
 
     pub fn icon(self) -> &'static str {
@@ -184,10 +193,10 @@ impl Insert {
     }
 
     pub fn label(self) -> String {
-        tr(match self {
-            Self::Table => "Table…",
-            Self::HorizontalRule => "Horizontal Line",
-        })
+        match self {
+            Self::Table => tr("Table…"),
+            Self::HorizontalRule => tr("Horizontal Line"),
+        }
     }
 
     pub fn icon(self) -> &'static str {

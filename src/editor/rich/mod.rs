@@ -131,6 +131,8 @@ mod imp {
         pub language_action: RefCell<Option<gio::SimpleAction>>,
         /// What the context menu was last built for.
         pub menu_key: RefCell<String>,
+        /// The list item last announced to screen readers.
+        pub announced: RefCell<Option<String>>,
         pub hovering: Cell<bool>,
     }
 
@@ -865,6 +867,7 @@ impl RichView {
         self.update_typing_style();
         self.changed_layout();
         self.notify_edited();
+        self.announce_list_item();
     }
 
     fn notify_edited(&self) {
@@ -895,6 +898,7 @@ impl RichView {
         self.update_typing_style();
         self.changed_layout();
         self.notify_edited();
+        self.announce_list_item();
         result
     }
 
@@ -912,6 +916,7 @@ impl RichView {
         }
         self.update_context_menu();
         if imp.pending.get().is_none() {
+            self.announce_list_item();
             self.update_typing_style();
             // the empty last line forgets its kind once the caret leaves it
             if !self.is_empty_last_line(self.caret_line()) && imp.typing_kind.borrow().is_some() {

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Build and install Amoxtli for the current user (default) or system-wide:
 #   ./install.sh                     -> ~/.local
-#   ./install.sh --default           -> also make it the default Markdown viewer
+#   ./install.sh --default           -> also make it the default Markdown app
 #   sudo PREFIX=/usr/local ./install.sh   (build first as your user: cargo build --release)
 set -eu
 

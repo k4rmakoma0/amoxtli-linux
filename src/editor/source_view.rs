@@ -33,6 +33,10 @@ mod imp {
         pub pending: Cell<Option<(i32, i32)>>,
         /// Text replaced by `set_text`, which isn't an edit by the person.
         pub loading: Cell<bool>,
+        /// The editor's own buffer. While a whole text is styled the view shows a placeholder:
+        /// a buffer on screen relays out at every change, which made long texts take seconds.
+        pub own: RefCell<Option<gtk::TextBuffer>>,
+        pub fresh: Cell<bool>,
         /// Text from the formatted editor: highlighted, but not an edit by the person.
         pub quiet: Cell<bool>,
         pub preedit: Cell<bool>,
@@ -86,10 +90,11 @@ impl SourceView {
     }
 
     fn setup(&self) {
+        self.imp().own.replace(Some(self.buffer()));
         self.add_css_class("md-document");
         self.add_css_class("md-source");
         self.update_property(&[gtk::accessible::Property::Label(&crate::i18n::tr("Markdown"))]);
-        let buf = self.buffer();
+        let buf = self.buf();
         let table = buf.tag_table();
         for name in HIGHLIGHT_TAGS.iter().chain(["match", "match-current"].iter()) {
             table.add(&gtk::TextTag::new(Some(name)));
@@ -174,7 +179,8 @@ impl SourceView {
 
     /// Replaces the whole text, as when a file is opened. It can't be undone.
     pub fn set_text(&self, text: &str) {
-        let buf = self.buffer();
+        let buf = self.buf();
+        self.set_buffer(Some(&gtk::TextBuffer::new(None)));
         self.imp().loading.set(true);
         buf.begin_irreversible_action();
         buf.set_text(text);
@@ -182,8 +188,14 @@ impl SourceView {
         self.imp().loading.set(false);
         self.imp().pending.set(None);
         self.highlight_all();
+        self.set_buffer(Some(&buf));
         buf.place_cursor(&buf.start_iter());
         self.queue_formats();
+    }
+
+    /// The editor's buffer, even while the view shows a placeholder.
+    pub fn buf(&self) -> gtk::TextBuffer {
+        self.imp().own.borrow().clone().unwrap_or_else(|| self.buffer())
     }
 
     /// Shows text that changed in the formatted editor. Only what differs is replaced, so
@@ -192,7 +204,7 @@ impl SourceView {
     pub fn apply_external(&self, text: &str) {
         let current = self.text();
         let Some((range, inserted)) = crate::markdown::difference(&current, text) else { return };
-        let buf = self.buffer();
+        let buf = self.buf();
         let imp = self.imp();
         imp.quiet.set(true);
         buf.begin_irreversible_action();
@@ -206,7 +218,7 @@ impl SourceView {
     }
 
     pub fn text(&self) -> String {
-        let buf = self.buffer();
+        let buf = self.buf();
         buf.text(&buf.start_iter(), &buf.end_iter(), true).into()
     }
 
@@ -222,7 +234,7 @@ impl SourceView {
 
     /// The selection as character offsets.
     pub fn selection(&self) -> (i32, i32) {
-        let buf = self.buffer();
+        let buf = self.buf();
         match buf.selection_bounds() {
             Some((s, e)) => (s.offset(), e.offset()),
             None => {
@@ -233,13 +245,13 @@ impl SourceView {
     }
 
     pub fn selected_text(&self) -> String {
-        let buf = self.buffer();
+        let buf = self.buf();
         buf.selection_bounds().map(|(s, e)| buf.text(&s, &e, true).to_string()).unwrap_or_default()
     }
 
     /// Applies an edit as one undoable step, as if it had been typed.
     pub fn apply_edit(&self, edit: &TextEdit) {
-        let buf = self.buffer();
+        let buf = self.buf();
         buf.begin_user_action();
         let mut start = buf.iter_at_offset(edit.range.start as i32);
         let mut end = buf.iter_at_offset(edit.range.end as i32);
@@ -268,7 +280,7 @@ impl SourceView {
 
     /// The formatting at the caret, read from the syntax of its line.
     pub fn active_formats(&self) -> ActiveFormats {
-        let buf = self.buffer();
+        let buf = self.buf();
         let (s, e) = self.selection();
         let caret = buf.iter_at_offset(s);
         let line = caret.line();
@@ -282,7 +294,7 @@ impl SourceView {
 
     /// Moves the caret to a character offset and scrolls it to the top.
     pub fn reveal(&self, offset: i32) {
-        let buf = self.buffer();
+        let buf = self.buf();
         let it = buf.iter_at_offset(offset);
         buf.place_cursor(&it);
         let mark = buf.get_insert();
@@ -303,7 +315,7 @@ impl SourceView {
             (false, false) => 0.075,
         };
         let code_bg = if dark { gdk::RGBA::new(1.0, 1.0, 1.0, code_alpha) } else { gdk::RGBA::new(0.0, 0.0, 0.0, code_alpha) };
-        let table = self.buffer().tag_table();
+        let table = self.buf().tag_table();
         let tag = |name: &str| table.lookup(name).unwrap_or_else(|| panic!("missing tag {name}"));
         for (level, scale) in [(1, 1.45), (2, 1.3), (3, 1.15), (4, 1.0), (5, 1.0), (6, 1.0)] {
             let t = tag(&format!("h{level}"));
@@ -337,7 +349,7 @@ impl SourceView {
         if !self.is_editable() || self.imp().preedit.get() {
             return false;
         }
-        let buf = self.buffer();
+        let buf = self.buf();
         let (s, e) = self.selection();
         let line = buf.iter_at_offset(s).line();
         let (line_start, line_end) = self.line_bounds(line);
@@ -377,7 +389,7 @@ impl SourceView {
     // -------------------------------------------------------- highlighting
 
     fn line_bounds(&self, line: i32) -> (gtk::TextIter, gtk::TextIter) {
-        let buf = self.buffer();
+        let buf = self.buf();
         let start = buf.iter_at_line(line).unwrap_or_else(|| buf.end_iter());
         let mut end = start;
         if !end.ends_line() {
@@ -391,20 +403,23 @@ impl SourceView {
         if line <= 0 {
             return false;
         }
-        let buf = self.buffer();
+        let buf = self.buf();
         let Some(fenced) = buf.tag_table().lookup(FENCED) else { return false };
         let mut prev_end = buf.iter_at_line(line).unwrap_or_else(|| buf.end_iter());
         prev_end.backward_char() && prev_end.has_tag(&fenced)
     }
 
     fn highlight_all(&self) {
-        let lines = self.buffer().line_count();
+        let lines = self.buf().line_count();
+        // fresh text has no tags to take off: removing them line by line cost seconds
+        self.imp().fresh.set(true);
         self.highlight(0, lines - 1, false, false);
+        self.imp().fresh.set(false);
         self.color_code(0, lines - 1);
     }
 
     fn highlight_edit(&self, start: i32, end: i32) {
-        let buf = self.buffer();
+        let buf = self.buf();
         let first = buf.iter_at_offset(start).line();
         let last = buf.iter_at_offset(end).line();
         let to = self.highlight(first, last, self.starts_in_fence(first), true);
@@ -414,7 +429,7 @@ impl SourceView {
     // ------------------------------------------------------------ code colors
 
     fn fenced_tag(&self) -> gtk::TextTag {
-        self.buffer().tag_table().lookup(FENCED).expect("fenced tag")
+        self.buf().tag_table().lookup(FENCED).expect("fenced tag")
     }
 
     /// Whether a fenced code block is open after a line, as the last pass marked it.
@@ -425,7 +440,7 @@ impl SourceView {
     /// Colors the code blocks lines `first..=last` touch, each one whole, from the line after
     /// its opening fence up to its closing fence: a comment or a string may span lines.
     fn color_code(&self, first: i32, last: i32) {
-        let buf = self.buffer();
+        let buf = self.buf();
         let count = buf.line_count();
         // back to the opening fence of a block the first line is in
         let mut line = first.max(0);
@@ -453,7 +468,7 @@ impl SourceView {
 
     /// Lines `from..to` are one block's code.
     fn color_block(&self, from: i32, to: i32, info: &str) {
-        let buf = self.buffer();
+        let buf = self.buf();
         if from >= to || from >= buf.line_count() {
             return;
         }
@@ -484,7 +499,7 @@ impl SourceView {
     /// code block, the lines after it are styled again too.
     /// Returns the last line styled.
     fn highlight(&self, first: i32, last: i32, starts_in_fence: bool, follow_up: bool) -> i32 {
-        let buf = self.buffer();
+        let buf = self.buf();
         let table = buf.tag_table();
         let tags: Vec<gtk::TextTag> = HIGHLIGHT_TAGS.iter().filter_map(|n| table.lookup(n)).collect();
         let fenced = table.lookup(FENCED).expect("fenced tag");
@@ -496,8 +511,10 @@ impl SourceView {
             if !next.forward_line() {
                 next = buf.end_iter();
             }
-            for t in &tags {
-                buf.remove_tag(t, &start, &next);
+            if !self.imp().fresh.get() {
+                for t in &tags {
+                    buf.remove_tag(t, &start, &next);
+                }
             }
             let content = buf.text(&start, &content_end, true);
             spans.clear();
@@ -528,7 +545,7 @@ impl SourceView {
     /// What a line was scanned with, worked out from how it was marked: a fence line marked
     /// as open opened a block, so it started outside one, and the opposite for the others.
     fn next_line_starts_in_fence(&self, line: i32, fenced: &gtk::TextTag) -> bool {
-        let buf = self.buffer();
+        let buf = self.buf();
         let (start, end) = self.line_bounds(line);
         let marked = start.has_tag(fenced);
         let content = buf.text(&start, &end, true);
@@ -563,7 +580,7 @@ fn tag_name(kind: SyntaxKind) -> &'static str {
 impl SourceView {
     /// Moves the caret without scrolling, as after reloading the text.
     pub fn place_cursor_at(&self, offset: i32) {
-        let buf = self.buffer();
+        let buf = self.buf();
         buf.place_cursor(&buf.iter_at_offset(offset));
     }
 }
@@ -572,7 +589,7 @@ impl SourceView {
     /// Where each top-level block of the given character offsets starts, as the scroll
     /// offset that puts it at the top of the view.
     pub fn offsets_of(&self, starts: &[usize]) -> Vec<f64> {
-        let buf = self.buffer();
+        let buf = self.buf();
         let Some(adj) = self.vadjustment() else { return vec![] };
         // buffer coordinates to the adjustment's: they differ by a constant
         let shift = self.visible_rect().y() as f64 - adj.value();

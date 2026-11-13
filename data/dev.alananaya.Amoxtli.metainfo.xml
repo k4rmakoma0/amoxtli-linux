@@ -3,7 +3,7 @@
 <component type="desktop-application">
   <id>dev.alananaya.Amoxtli</id>
   <name>Amoxtli</name>
-  <summary>Read Markdown documents and notes</summary>
+  <summary>Write and read Markdown documents and notes</summary>
   <developer id="dev.alananaya">
     <name>Alan Anaya Araujo</name>
   </developer>
@@ -12,17 +12,19 @@
 
   <description>
     <p>
-      Amoxtli (“book” in Nahuatl) is a fast, native Markdown viewer. Documents are
-      rendered straight into native widgets instead of a web page, so they look
-      and feel like the rest of your desktop.
+      Amoxtli (“book” in Nahuatl) is a fast, native Markdown editor. Write in the
+      Markdown source, in a formatted view where the syntax never shows, or in both
+      side by side. No web page in between: documents look and feel like the rest of
+      your desktop.
     </p>
     <ul>
+      <li>Source, formatted and split views, all editable, scrolling together</li>
+      <li>Formatting tools, lists that continue as you type, editable tables</li>
+      <li>Code blocks colored by language</li>
+      <li>Saves as you go, and never over a file another app changed</li>
       <li>Table of contents that follows your reading position</li>
       <li>Browse whole folders of notes</li>
-      <li>Live reload when the file changes</li>
-      <li>Tables, task lists, footnotes, alerts, images and syntax-highlighted code</li>
-      <li>Word count and reading time</li>
-      <li>Find in document, history between linked files and zoom</li>
+      <li>Word count and reading time, your choice of font and text size</li>
     </ul>
   </description>
 

@@ -16,7 +16,8 @@ use std::rc::Rc;
 use std::time::Duration;
 
 const README_NAMES: &[&str] = &["README.md", "readme.md", "Readme.md", "README.markdown", "index.md", "INDEX.md"];
-const WORDS_PER_MINUTE: f64 = 220.0;
+/// As the macOS app counts it: under 200 words is less than a minute.
+const WORDS_PER_MINUTE: f64 = 200.0;
 
 thread_local! {
     static WINDOWS: RefCell<Vec<Rc<Window>>> = const { RefCell::new(Vec::new()) };
@@ -89,6 +90,11 @@ pub struct Window {
     /// Which editor the tools act on in the split view: the last one with focus.
     last_editor: Cell<EditorMode>,
     split_scroll: Rc<SplitScroll>,
+    /// Past `FORMATTED_LIMIT` the formatted editor isn't built: the document is edited in the source.
+    too_large: Cell<bool>,
+    /// The headings of a document too large for the formatted editor, marked in the source.
+    source_headings: RefCell<Vec<Heading>>,
+    too_large_page: adw::StatusPage,
     /// Where each heading of the Contents panel starts in the source, in characters.
     heading_offsets: RefCell<Vec<i32>>,
     conflict_open: Cell<bool>,
@@ -245,9 +251,18 @@ impl Window {
         content_stack.add_named(&paned, Some("doc"));
         content_stack.add_named(&pick_page, Some("pick"));
         content_stack.add_named(&error_page, Some("error"));
+        let too_large_page = adw::StatusPage::builder().icon_name("text-x-generic-symbolic").title(tr("Document Too Large")).build();
+        too_large_page.set_child(Some(&gtk::Button::builder()
+            .label(tr("Show Source"))
+            .action_name("win.mode")
+            .action_target(&EditorMode::Source.name().to_variant())
+            .halign(gtk::Align::Center)
+            .css_classes(["pill", "suggested-action"])
+            .build()));
+        content_stack.add_named(&too_large_page, Some("too-large"));
 
         let banner = adw::Banner::builder()
-            .title(tr("Amoxtli is not your default Markdown viewer"))
+            .title(tr("Amoxtli is not your default Markdown app"))
             .button_label(tr("Make Default"))
             .action_name("app.make-default")
             .build();
@@ -348,6 +363,9 @@ impl Window {
             outline_source: RefCell::new(None),
             last_editor: Cell::new(EditorMode::Source),
             split_scroll,
+            too_large: Cell::new(false),
+            source_headings: RefCell::new(vec![]),
+            too_large_page,
             heading_offsets: RefCell::new(vec![]),
             conflict_open: Cell::new(false),
         });
@@ -526,6 +544,17 @@ impl Window {
             sm.connect_accent_color_notify(restyle),
         ]);
 
+        // a change the watcher missed (a network folder, a sandbox) shows when coming back
+        self.window.connect_is_active_notify({
+            let weak = weak.clone();
+            move |win| {
+                if let (Some(w), true) = (weak.upgrade(), win.is_active()) {
+                    if !w.conflict_open.get() {
+                        w.check_disk();
+                    }
+                }
+            }
+        });
         self.window.connect_close_request({
             let weak = weak.clone();
             move |_| {
@@ -763,6 +792,11 @@ impl Window {
         self.title.set_subtitle(&parent.as_ref().map(display_path).unwrap_or_default());
         self.update_title();
         self.content_stack.set_visible_child_name("doc");
+        // a document too large for the formatted editor opens in the source
+        if self.too_large.get() && self.mode.get() != EditorMode::Source {
+            self.set_mode(EditorMode::Source);
+        }
+        self.update_content_page();
         if !keep_side && self.folder.borrow().is_none() {
             self.show_side("contents");
         }
@@ -813,12 +847,16 @@ impl Window {
         self.window.set_title(Some(&format!("{shown} — Amoxtli")));
     }
 
-    /// Shows a text in the formatted editor, keeping its caret where it was.
+    /// Shows a text in the formatted editor, keeping its caret where it was. A text too large
+    /// for it is only edited in the source: the formatted editor is never built for it.
     fn render(self: &Rc<Self>, text: &str, base: Option<gio::File>) {
+        let too_large = !editor::fits_formatted(text);
+        self.too_large.set(too_large);
         let buf = self.doc.buffer();
         let caret = buf.iter_at_mark(&buf.get_insert()).offset();
-        self.doc.render(text, base);
+        self.doc.render(if too_large { "" } else { text }, base);
         buf.place_cursor(&buf.iter_at_offset(caret));
+        self.update_content_page();
         self.matches.borrow_mut().clear();
         self.refresh_outline(text);
         self.status_bar.set_visible(true);
@@ -830,10 +868,63 @@ impl Window {
         if let Some(id) = self.outline_source.take() {
             id.remove();
         }
-        self.heading_offsets.replace(crate::document::heading_offsets(text));
-        self.outline.set_headings(self.doc.headings());
-        self.total_words.set(self.doc.count_words(None));
+        let headings = crate::document::source_headings(text);
+        self.heading_offsets.replace(headings.iter().map(|h| h.offset).collect());
+        if self.too_large.get() {
+            // marked in the source, which is where the document is
+            let buf = self.source.buffer();
+            for h in self.source_headings.take() {
+                if !h.mark.is_deleted() {
+                    buf.delete_mark(&h.mark);
+                }
+            }
+            let mut slugs = std::collections::HashMap::<String, usize>::new();
+            let list: Vec<Heading> = headings
+                .into_iter()
+                .map(|h| {
+                    let base = h.id.clone().unwrap_or_else(|| crate::document::slugify(&h.title));
+                    let n = slugs.entry(base.clone()).or_insert(0);
+                    let slug = if *n == 0 { base.clone() } else { format!("{base}-{n}") };
+                    *n += 1;
+                    let mark = buf.create_mark(None, &buf.iter_at_offset(h.offset), true);
+                    Heading { level: h.level, title: h.title.trim().to_owned(), slug, mark }
+                })
+                .collect();
+            self.source_headings.replace(list);
+            self.total_words.set(crate::document::count_words(text) as u64);
+        } else {
+            self.total_words.set(self.doc.count_words(None));
+        }
+        self.outline.set_headings(self.headings());
         self.update_stats();
+    }
+
+    /// The document's headings: from the formatted editor, or from the source when the
+    /// document is too large for it.
+    fn headings(&self) -> Vec<Heading> {
+        if self.too_large.get() {
+            self.source_headings.borrow().clone()
+        } else {
+            self.doc.headings()
+        }
+    }
+
+    /// With a document open: the editors, or, for one too large to format, the page that says
+    /// so in Format and Split.
+    fn update_content_page(&self) {
+        let shown = self.content_stack.visible_child_name();
+        if !matches!(shown.as_deref(), Some("doc" | "too-large")) {
+            return;
+        }
+        let page = if self.too_large.get() && self.mode.get().shows_format() { "too-large" } else { "doc" };
+        if page == "too-large" {
+            let size = self.source.text().len() as u64;
+            self.too_large_page.set_description(Some(&fill(
+                &tr("This document takes {size}. The formatted view handles documents up to {limit}; you can read and edit it in the source."),
+                &[("size", &glib::format_size(size)), ("limit", &glib::format_size(editor::FORMATTED_LIMIT as u64))],
+            )));
+        }
+        self.content_stack.set_visible_child_name(page);
     }
 
     fn close_document(&self) {
@@ -883,11 +974,18 @@ impl Window {
         }
         let Ok(monitor) = f.monitor_file(gio::FileMonitorFlags::WATCH_MOVES, gio::Cancellable::NONE) else { return };
         let weak = Rc::downgrade(self);
-        monitor.connect_changed(move |_, _, _, event| {
+        monitor.connect_changed(move |_, _, other, event| {
             if matches!(event, gio::FileMonitorEvent::AttributeChanged | gio::FileMonitorEvent::PreUnmount) {
                 return;
             }
             let Some(w) = weak.upgrade() else { return };
+            // renamed or moved in the same folder: the document follows it
+            if let (gio::FileMonitorEvent::Renamed | gio::FileMonitorEvent::MovedOut, Some(to)) = (event, other) {
+                if to.query_exists(gio::Cancellable::NONE) {
+                    w.follow_rename(to.clone());
+                    return;
+                }
+            }
             if let Some(id) = w.reload_source.take() {
                 id.remove();
             }
@@ -912,7 +1010,8 @@ impl Window {
         }
         self.source_scroller.set_visible(mode.shows_source());
         self.scroller.set_visible(mode.shows_format());
-        self.split_scroll.set_enabled(mode == EditorMode::Split);
+        self.split_scroll.set_enabled(mode == EditorMode::Split && !self.too_large.get());
+        self.update_content_page();
         if mode == EditorMode::Split {
             let paned = self.paned.clone();
             glib::idle_add_local_once(move || paned.set_position(paned.width() / 2));
@@ -956,6 +1055,9 @@ impl Window {
     /// The editor the tools act on: the one on screen, or in the split view the last one
     /// with focus.
     fn tools_target(&self) -> EditorMode {
+        if self.too_large.get() {
+            return EditorMode::Source;
+        }
         match self.mode.get() {
             EditorMode::Split => self.last_editor.get(),
             mode => mode,
@@ -1182,7 +1284,11 @@ impl Window {
             self.update_title();
             return true;
         }
-        // never write over a file that changed in another app
+        // never write over a file that changed in another app, nor bring back a deleted one unasked
+        if !file.query_exists(gio::Cancellable::NONE) {
+            self.file_removed();
+            return false;
+        }
         if let Ok((bytes, _)) = file.load_contents(gio::Cancellable::NONE) {
             if bytes.as_ref() != disk.as_slice() {
                 self.resolve_conflict(bytes.to_vec());
@@ -1222,6 +1328,10 @@ impl Window {
             }
             return;
         };
+        if !file.query_exists(gio::Cancellable::NONE) {
+            self.file_removed();
+            return;
+        }
         let Ok((bytes, _)) = file.load_contents(gio::Cancellable::NONE) else { return };
         if bytes.as_ref() == disk.as_slice() {
             return; // our own save, or nothing changed
@@ -1250,6 +1360,65 @@ impl Window {
         self.update_title();
         self.rerender();
         self.restore_scroll(&self.source_scroller.vadjustment(), source_scroll, 0);
+    }
+
+    /// The file was renamed or moved: the document goes on with it under its new name.
+    fn follow_rename(self: &Rc<Self>, to: gio::File) {
+        self.current.replace(Some(to.clone()));
+        self.title.set_subtitle(&to.parent().as_ref().map(display_path).unwrap_or_default());
+        self.update_title();
+        self.watch(&to);
+    }
+
+    /// The file is gone. With nothing unsaved the window says so, and shows the file again if
+    /// it comes back; with unsaved edits the person chooses to write them again or let them go.
+    fn file_removed(self: &Rc<Self>) {
+        let Some(file) = self.current.borrow().clone() else { return };
+        if let Some(id) = self.save_source.take() {
+            id.remove();
+        }
+        if !self.dirty.get() {
+            self.show_error(&file, &tr("File Not Found"), &fill(&tr("“{name}” was moved or deleted."), &[("name", &basename(&file))]));
+            return;
+        }
+        if self.conflict_open.replace(true) {
+            return;
+        }
+        let dialog = adw::AlertDialog::new(
+            Some(&tr("File Deleted")),
+            Some(&fill(&tr("“{name}” was moved or deleted in another app. Save your version again?"), &[("name", &basename(&file))])),
+        );
+        dialog.add_responses(&[("discard", &tr("Discard Changes")), ("save", &tr("Save Again"))]);
+        dialog.set_response_appearance("discard", adw::ResponseAppearance::Destructive);
+        dialog.set_response_appearance("save", adw::ResponseAppearance::Suggested);
+        dialog.set_default_response(Some("save"));
+        // Escape keeps editing: the question comes back at the next save
+        dialog.set_close_response("keep");
+        let this = self.clone();
+        glib::spawn_future_local(async move {
+            let response = dialog.choose_future(Some(&this.window)).await;
+            this.conflict_open.set(false);
+            match response.as_str() {
+                "save" => {
+                    this.flush_rich_sync();
+                    let text = this.source.text();
+                    match file.replace_contents(text.as_bytes(), None, false, gio::FileCreateFlags::NONE, gio::Cancellable::NONE) {
+                        Ok(_) => {
+                            this.disk.replace(Some(text.into_bytes()));
+                            this.dirty.set(false);
+                            this.update_title();
+                            this.watch(&file);
+                        }
+                        Err(e) => this.toast(e.message(), 5),
+                    }
+                }
+                "discard" => {
+                    this.dirty.set(false);
+                    this.file_removed();
+                }
+                _ => {}
+            }
+        });
     }
 
     fn resolve_conflict(self: &Rc<Self>, on_disk: Vec<u8>) {
@@ -1382,7 +1551,8 @@ impl Window {
     }
 
     fn scroll_to_slug(&self, slug: &str) {
-        if let Some(h) = self.doc.find_heading(slug) {
+        let slug_l = crate::document::percent_decode(slug).to_lowercase();
+        if let Some(h) = self.headings().into_iter().find(|h| h.slug == slug_l) {
             self.scroll_to_heading(&h);
         } else if let Some(mark) = self.doc.find_anchor(slug) {
             self.doc.scroll_to_mark(&mark, 0.0, true, 0.0, 0.0);
@@ -1392,7 +1562,7 @@ impl Window {
     fn scroll_to_heading(&self, h: &Heading) {
         let mode = self.mode.get();
         if mode.shows_source() {
-            let index = self.doc.headings().iter().position(|x| x.mark == h.mark);
+            let index = self.headings().iter().position(|x| x.mark == h.mark);
             if let Some(&offset) = index.and_then(|i| self.heading_offsets.borrow().get(i).copied()).as_ref() {
                 self.source.reveal(offset);
             }
@@ -1411,7 +1581,7 @@ impl Window {
         if self.mode.get() != EditorMode::Source {
             return;
         }
-        let hs = self.doc.headings();
+        let hs = self.headings();
         let Some(first) = hs.first() else { return };
         let buf = self.source.buffer();
         let top = self.source.visible_rect().y() + 60;
@@ -1596,7 +1766,7 @@ impl Window {
     #[cfg(debug_assertions)]
     pub fn debug_actions(self: &Rc<Self>) {
         if let Some(n) = std::env::var("AMOXTLI_SNAPSHOT_HEADING").ok().and_then(|n| n.parse::<usize>().ok()) {
-            if let Some(h) = self.doc.headings().get(n) {
+            if let Some(h) = self.headings().get(n) {
                 self.scroll_to_heading(h);
             }
         }
@@ -1764,6 +1934,21 @@ impl Window {
 
         self.rich_self_test(&mut check);
 
+        // past 1 MB a document opens in the source, and the formatted editor isn't built
+        let huge = "word ".repeat(220_000);
+        self.set_mode(EditorMode::Format);
+        self.source.set_text(&huge);
+        self.content_stack.set_visible_child_name("doc");
+        self.rerender();
+        let page = self.content_stack.visible_child_name().map(|n| n.to_string()).unwrap_or_default();
+        check("large: Format shows the size page, not the editor", self.too_large.get() && page == "too-large" && self.doc.markdown().is_empty(), page);
+        self.set_mode(EditorMode::Source);
+        let page = self.content_stack.visible_child_name().map(|n| n.to_string()).unwrap_or_default();
+        check("large: Show Source goes back to editing it", page == "doc", page);
+        self.source.set_text("small");
+        self.rerender();
+        check("large: a smaller text formats again", !self.too_large.get(), String::new());
+
         // an edit in the formatted editor reaches the Markdown text, and the file
         self.set_mode(EditorMode::Split);
         self.source.set_text("# T\n\nbody\n");
@@ -1806,6 +1991,18 @@ impl Window {
         type_text("!");
         check("a changed file isn't written over", !self.save_now() && read() == "changed elsewhere" && self.conflict_open.get(), read());
         self.dirty.set(false);
+
+        // a file deleted with nothing unsaved: the window says so
+        self.conflict_open.set(false);
+        if let Some(dir) = file.parent().and_then(|d| d.path()) {
+            let gone = dir.join("selftest-deleted.md");
+            let _ = std::fs::write(&gone, "x\n");
+            self.open_file(&gio::File::for_path(&gone), false, None, true, 0.0);
+            let _ = std::fs::remove_file(&gone);
+            self.check_disk();
+            let page = self.content_stack.visible_child_name().map(|n| n.to_string()).unwrap_or_default();
+            check("a deleted file shows as gone, without a crash", page == "error" && self.error_page.title() == tr("File Not Found"), page);
+        }
         println!("self-test: {failures} failed");
         self.scroll_self_test();
     }
@@ -1862,6 +2059,21 @@ impl Window {
                 }
                 None => report("rich: a chip is drawn for each code block on screen", false, "none".into()),
             }
+            // a renamed file: the document follows it
+            let dir = std::env::temp_dir().join(format!("amoxtli-selftest-{}", std::process::id()));
+            let _ = std::fs::create_dir_all(&dir);
+            let (a, b) = (dir.join("before.md"), dir.join("after.md"));
+            let _ = std::fs::write(&a, "# Renamed\n");
+            this.disk.replace(None);
+            this.open_file(&gio::File::for_path(&a), false, None, true, 0.0);
+            let _ = std::fs::rename(&a, &b);
+            let t = this.clone();
+            glib::timeout_add_local_once(Duration::from_millis(700), move || {
+                let now = t.current.borrow().as_ref().and_then(|f| f.path());
+                println!("{} a renamed file is followed{}", if now.as_deref() == Some(b.as_path()) { "PASS" } else { "FAIL" },
+                    if now.as_deref() == Some(b.as_path()) { String::new() } else { format!(": {now:?}") });
+                let _ = std::fs::remove_dir_all(&dir);
+            });
             println!("scroll-test: done");
         });
     }
@@ -2016,6 +2228,21 @@ impl Window {
         let sample = "# Doc\n\nSome **bold** and [a link](u).\n\n> [!TIP]\n> Alert\n\n| A | B |\n| :--- | ---: |\n| 1 |  |\n\n- [ ] task\n\n<div>raw</div>\n";
         load(sample);
         check("rich: what opens comes back unchanged", md() == sample, md());
+        load("1. a\n2. b\n   - inner\n- [x] done");
+        let at = |line: i32| {
+            buf.place_cursor(&buf.iter_at_line(line).unwrap());
+            doc.list_item_announcement()
+        };
+        let heard = [at(1), at(2), at(3)];
+        let said = |template: &str, args: &[(&str, &str)]| Some(fill(&tr(template), args));
+        check("rich: list items are announced with their number or bullet and level",
+            heard == [said("{number}, level {level}", &[("number", "2"), ("level", "1")]), said("Bullet, level {level}", &[("level", "2")]),
+                said("Task, done, level {level}", &[("level", "1")])], format!("{heard:?}"));
+        load("1. a\n2. b");
+        doc.press_return();
+        check("rich: and renumber as items come", doc.list_item_announcement() == said("{number}, level {level}", &[("number", "3"), ("level", "1")]),
+            format!("{:?}", doc.list_item_announcement()));
+
         load("```\nx = 1\n```");
         buf.place_cursor(&buf.start_iter());
         doc.set_code_language(Some("json".into()));
@@ -2174,7 +2401,7 @@ fn main_menu() -> gio::Menu {
     ]);
     let mut last = vec![(tr("Keyboard Shortcuts"), "app.shortcuts"), (tr("About Amoxtli"), "app.about")];
     if !config::is_flatpak() {
-        last.insert(0, (tr("Set as Default Markdown Viewer"), "app.make-default"));
+        last.insert(0, (tr("Set as Default Markdown App"), "app.make-default"));
     }
     section(&last);
     menu

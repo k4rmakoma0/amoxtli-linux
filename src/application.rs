@@ -265,7 +265,7 @@ fn make_default(app: &adw::Application) {
         w.refresh_banner();
     }
     if let Some(w) = win {
-        w.toast(&tr("Amoxtli is now the default Markdown viewer"), 3);
+        w.toast(&tr("Amoxtli is now your default Markdown app"), 3);
     }
 }
 
@@ -275,7 +275,7 @@ fn about(app: &adw::Application) {
         .application_icon(APP_ID)
         .developer_name(tr("Amoxtli Contributors"))
         .version(VERSION)
-        .comments(format!("{}\n{}", tr("A native Markdown viewer for GNOME and Linux."), tr("Amoxtli means “book” in Nahuatl.")))
+        .comments(format!("{}\n{}", tr("A native Markdown editor for GNOME and Linux."), tr("Amoxtli means “book” in Nahuatl.")))
         .license_type(gtk::License::MitX11)
         .build();
     let credits = tr("translator-credits");

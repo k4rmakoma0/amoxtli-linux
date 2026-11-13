@@ -1,0 +1,619 @@
+# Chinese (Traditional) translation for Amoxtli.
+msgid ""
+msgstr ""
+"Project-Id-Version: amoxtli\n"
+"Language: zh_TW\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: src/application.rs:96
+#, python-brace-format
+msgid "Text size {percent}%"
+msgstr "文字大小 {percent}%"
+
+#: src/application.rs:120 src/application.rs:320
+msgid "Larger Text"
+msgstr "放大文字"
+
+#: src/application.rs:121 src/application.rs:321
+msgid "Smaller Text"
+msgstr "縮小文字"
+
+#: src/application.rs:122 src/application.rs:322
+msgid "Normal Size"
+msgstr "預設大小"
+
+#: src/application.rs:252
+msgid "Install Amoxtli first (run ./install.sh)"
+msgstr "請先安裝 Amoxtli（執行 ./install.sh）"
+
+#: src/application.rs:268
+msgid "Amoxtli is now your default Markdown app"
+msgstr "Amoxtli 現在是你的預設 Markdown 應用程式"
+
+#: src/application.rs:276
+msgid "Amoxtli Contributors"
+msgstr "Amoxtli 貢獻者"
+
+#: src/application.rs:278
+msgid "A native Markdown editor for GNOME and Linux."
+msgstr "適用於 GNOME 和 Linux 的原生 Markdown 編輯器。"
+
+#: src/application.rs:278
+msgid "Amoxtli means “book” in Nahuatl."
+msgstr "Amoxtli 在納瓦特爾語中意為「書」。"
+
+#: src/application.rs:281
+msgid "translator-credits"
+msgstr ""
+
+#: src/application.rs:291
+msgid "General"
+msgstr "一般"
+
+#: src/application.rs:292 src/window.rs:157 src/window.rs:166
+msgid "Open File"
+msgstr "開啟檔案"
+
+#: src/application.rs:293 src/window.rs:702
+msgid "Open Folder"
+msgstr "開啟資料夾"
+
+#: src/application.rs:294 src/window.rs:2363
+msgid "New Window"
+msgstr "開新視窗"
+
+#: src/application.rs:295
+msgid "Close Window"
+msgstr "關閉視窗"
+
+#: src/application.rs:296
+msgid "Quit"
+msgstr "結束"
+
+#: src/application.rs:297 src/window.rs:2372
+msgid "Keyboard Shortcuts"
+msgstr "鍵盤快捷鍵"
+
+#: src/application.rs:299
+msgid "Editing"
+msgstr "編輯"
+
+#: src/application.rs:300
+msgid "Save"
+msgstr "儲存"
+
+#: src/application.rs:301
+msgid "Undo"
+msgstr "還原"
+
+#: src/application.rs:302
+msgid "Redo"
+msgstr "重做"
+
+#: src/application.rs:303 src/window.rs:256
+msgid "Show Source"
+msgstr "顯示原始碼"
+
+#: src/application.rs:304
+msgid "Show Formatted"
+msgstr "顯示格式"
+
+#: src/application.rs:305
+msgid "Show Split"
+msgstr "分割顯示"
+
+#: src/application.rs:307 src/editor/rich/mod.rs:208
+msgid "Document"
+msgstr "文件"
+
+#: src/application.rs:308 src/window.rs:186 src/window.rs:2363
+msgid "Find"
+msgstr "尋找"
+
+#: src/application.rs:309 src/window.rs:2363
+msgid "Reload"
+msgstr "重新載入"
+
+#: src/application.rs:310 src/window.rs:2368
+msgid "Edit in Text Editor"
+msgstr "在文字編輯器中編輯"
+
+#: src/application.rs:311 src/window.rs:2370
+msgid "Copy File Path"
+msgstr "拷貝檔案路徑"
+
+#: src/application.rs:312 src/window.rs:147
+msgid "Back"
+msgstr "上一頁"
+
+#: src/application.rs:313 src/window.rs:149
+msgid "Forward"
+msgstr "下一頁"
+
+#: src/application.rs:314
+msgid "Scroll to Top"
+msgstr "捲動到頂端"
+
+#: src/application.rs:316
+msgid "View"
+msgstr "檢視"
+
+#: src/application.rs:317 src/window.rs:142
+msgid "Toggle Sidebar"
+msgstr "切換側邊欄"
+
+#: src/application.rs:318
+msgid "Show Contents"
+msgstr "顯示目錄"
+
+#: src/application.rs:319
+msgid "Show Files"
+msgstr "顯示檔案"
+
+#: src/application.rs:336 src/editor/mod.rs:289 src/window.rs:2334
+msgid "Format"
+msgstr "格式"
+
+#: src/document.rs:81
+msgid "Note"
+msgstr "注意"
+
+#: src/document.rs:82
+msgid "Tip"
+msgstr "提示"
+
+#: src/document.rs:83
+msgid "Important"
+msgstr "重要"
+
+#: src/document.rs:84
+msgid "Warning"
+msgstr "警告"
+
+#: src/document.rs:85
+msgid "Caution"
+msgstr "小心"
+
+#: src/editor/dialogs.rs:9
+msgid "Text to display"
+msgstr "顯示的文字"
+
+#: src/editor/dialogs.rs:11
+msgid "Address"
+msgstr "位址"
+
+#: src/editor/dialogs.rs:19
+msgid "Insert Link"
+msgstr "插入連結"
+
+#: src/editor/dialogs.rs:20 src/editor/dialogs.rs:58 src/window.rs:1473
+msgid "Cancel"
+msgstr "取消"
+
+#: src/editor/dialogs.rs:20 src/editor/dialogs.rs:58
+msgid "Insert"
+msgstr "插入"
+
+#: src/editor/dialogs.rs:50
+msgid "Columns"
+msgstr "欄數"
+
+#: src/editor/dialogs.rs:51
+msgid "Rows"
+msgstr "列數"
+
+#: src/editor/dialogs.rs:56
+msgid "The first row is the header."
+msgstr "第一列是標題列。"
+
+#: src/editor/dialogs.rs:56
+msgid "Use 1–20 columns and 1–100 rows."
+msgstr "請輸入1至20欄和1至100列。"
+
+#: src/editor/dialogs.rs:57
+msgid "Insert Table"
+msgstr "插入表格"
+
+#: src/editor/dialogs.rs:68
+#, python-brace-format
+msgid "Column {n}"
+msgstr "第 {n} 欄"
+
+#: src/editor/mod.rs:105
+msgid "Bold"
+msgstr "粗體"
+
+#: src/editor/mod.rs:106
+msgid "Italic"
+msgstr "斜體"
+
+#: src/editor/mod.rs:107
+msgid "Underline"
+msgstr "底線"
+
+#: src/editor/mod.rs:108
+msgid "Strikethrough"
+msgstr "刪除線"
+
+#: src/editor/mod.rs:109
+msgid "Code"
+msgstr "程式碼"
+
+#: src/editor/mod.rs:110
+msgid "Bulleted List"
+msgstr "項目符號列表"
+
+#: src/editor/mod.rs:111
+msgid "Numbered List"
+msgstr "編號列表"
+
+#: src/editor/mod.rs:112
+msgid "Quote"
+msgstr "引言"
+
+#: src/editor/mod.rs:113
+msgid "Link…"
+msgstr "連結⋯"
+
+#: src/editor/mod.rs:114
+msgid "Code Block"
+msgstr "程式碼區塊"
+
+#: src/editor/mod.rs:197
+msgid "Table…"
+msgstr "表格…"
+
+#: src/editor/mod.rs:198
+msgid "Horizontal Line"
+msgstr "分隔線"
+
+#: src/editor/mod.rs:219
+#, python-brace-format
+msgid "Heading {n}"
+msgstr "標題 {n}"
+
+#: src/editor/mod.rs:220
+msgid "Text"
+msgstr "內文"
+
+#: src/editor/mod.rs:313 src/editor/mod.rs:317
+msgid "Style"
+msgstr "樣式"
+
+#: src/editor/overflow.rs:48
+msgid "More Formatting"
+msgstr "更多格式"
+
+#: src/editor/rich/draw.rs:393
+#, python-brace-format
+msgid "Task, done, level {level}"
+msgstr "工作，已完成，第 {level} 層"
+
+#: src/editor/rich/draw.rs:394
+#, python-brace-format
+msgid "Task, not done, level {level}"
+msgstr "工作，未完成，第 {level} 層"
+
+#: src/editor/rich/draw.rs:395
+#, python-brace-format
+msgid "{number}, level {level}"
+msgstr "{number}，第 {level} 層"
+
+#: src/editor/rich/draw.rs:396
+#, python-brace-format
+msgid "Bullet, level {level}"
+msgstr "項目符號，第 {level} 層"
+
+#: src/editor/rich/keys.rs:369
+msgid "Ctrl+click to open"
+msgstr "按住 Ctrl 點按以開啟"
+
+#: src/editor/rich/language.rs:120
+msgid "Choose Language"
+msgstr "選擇語言"
+
+#: src/editor/rich/language.rs:210
+msgid "None"
+msgstr "無"
+
+#: src/editor/rich/language.rs:237
+msgid "Language"
+msgstr "語言"
+
+#: src/editor/source_view.rs:96
+msgid "Markdown"
+msgstr "Markdown"
+
+#: src/sidebar.rs:42
+msgid "No Headings"
+msgstr "沒有標題"
+
+#: src/sidebar.rs:43
+msgid "This document has no table of contents"
+msgstr "此文件沒有目錄"
+
+#: src/sidebar.rs:191 src/window.rs:152 src/window.rs:240
+msgid "Open Folder…"
+msgstr "開啟資料夾…"
+
+#: src/sidebar.rs:198
+msgid "No Folder"
+msgstr "沒有資料夾"
+
+#: src/sidebar.rs:199
+msgid "Open a folder to browse its Markdown files"
+msgstr "開啟資料夾以瀏覽其中的 Markdown 檔案"
+
+#: src/typography.rs:40
+msgid "System"
+msgstr "系統"
+
+#: src/typography.rs:41
+msgid "Serif"
+msgstr "襯線"
+
+#: src/typography.rs:42
+msgid "Monospace"
+msgstr "等寬"
+
+#: src/typography.rs:43
+msgid "Rounded"
+msgstr "圓體"
+
+#: src/window.rs:131
+msgid "Contents"
+msgstr "目錄"
+
+#: src/window.rs:131
+msgid "Table of Contents"
+msgstr "目錄"
+
+#: src/window.rs:132
+msgid "Files"
+msgstr "檔案"
+
+#: src/window.rs:132
+msgid "Folder"
+msgstr "資料夾"
+
+#: src/window.rs:154
+msgid "Open"
+msgstr "開啟"
+
+#: src/window.rs:158 src/window.rs:167
+msgid "More Open Options"
+msgstr "更多開啟選項"
+
+#: src/window.rs:182
+msgid "Main Menu"
+msgstr "主選單"
+
+#: src/window.rs:192
+msgid "Font and Text Size"
+msgstr "字體和文字大小"
+
+#: src/window.rs:197
+msgid "Find in document"
+msgstr "在文件中尋找"
+
+#: src/window.rs:200
+msgid "Previous Match"
+msgstr "上一個符合項目"
+
+#: src/window.rs:202
+msgid "Next Match"
+msgstr "下一個符合項目"
+
+#: src/window.rs:235
+msgid "Open a Markdown file or a folder of notes."
+msgstr "開啟一個 Markdown 檔案或筆記資料夾。"
+
+#: src/window.rs:235
+msgid "You can also drop files here."
+msgstr "也可以將檔案拖放到這裡。"
+
+#: src/window.rs:238
+msgid "Open File…"
+msgstr "開啟檔案…"
+
+#: src/window.rs:245
+msgid "Choose a Document"
+msgstr "選擇文件"
+
+#: src/window.rs:246
+msgid "Select a Markdown file from the sidebar"
+msgstr "從側邊欄選擇一個 Markdown 檔案"
+
+#: src/window.rs:248 src/window.rs:758
+msgid "Unable to Open File"
+msgstr "無法開啟檔案"
+
+#: src/window.rs:254
+msgid "Document Too Large"
+msgstr "文件過大"
+
+#: src/window.rs:265
+msgid "Amoxtli is not your default Markdown app"
+msgstr "Amoxtli 不是你的預設 Markdown 應用程式"
+
+#: src/window.rs:266
+msgid "Make Default"
+msgstr "設為預設"
+
+#: src/window.rs:666
+msgid "Markdown Documents"
+msgstr "Markdown 文件"
+
+#: src/window.rs:674
+msgid "Text Files"
+msgstr "文字檔案"
+
+#: src/window.rs:677
+msgid "All Files"
+msgstr "所有檔案"
+
+#: src/window.rs:684
+msgid "Open Markdown File"
+msgstr "開啟 Markdown 檔案"
+
+#: src/window.rs:764
+msgid "Invalid Encoding"
+msgstr "編碼無效"
+
+#: src/window.rs:767
+msgid "This file isn't UTF-8 text, so Amoxtli can't show or edit it. It hasn't been changed."
+msgstr "此檔案不是 UTF-8 文字，Amoxtli 無法顯示或編輯它。檔案未被變更。"
+
+#: src/window.rs:923
+#, python-brace-format
+msgid "This document takes {size}. The formatted view handles documents up to {limit}; you can read and edit it in the source."
+msgstr "此文件大小為 {size}。格式檢視支援最大 {limit} 的文件；你可以在原始碼中閱讀和編輯它。"
+
+#: src/window.rs:1310
+#, python-brace-format
+msgid "Couldn’t save “{name}”. Check that you have permission to change it."
+msgstr "無法儲存「{name}」。請檢查你是否有權修改它。"
+
+#: src/window.rs:1381
+msgid "File Not Found"
+msgstr "找不到檔案"
+
+#: src/window.rs:1381
+#, python-brace-format
+msgid "“{name}” was moved or deleted."
+msgstr "「{name}」已被移動或刪除。"
+
+#: src/window.rs:1388
+msgid "File Deleted"
+msgstr "檔案已刪除"
+
+#: src/window.rs:1389
+#, python-brace-format
+msgid "“{name}” was moved or deleted in another app. Save your version again?"
+msgstr "「{name}」已在其他應用程式中被移動或刪除。要重新儲存你的版本嗎？"
+
+#: src/window.rs:1391 src/window.rs:1473
+msgid "Discard Changes"
+msgstr "捨棄變更"
+
+#: src/window.rs:1391
+msgid "Save Again"
+msgstr "重新儲存"
+
+#: src/window.rs:1431
+msgid "File Changed on Disk"
+msgstr "磁碟上的檔案已變更"
+
+#: src/window.rs:1433
+#, python-brace-format
+msgid "“{name}” was changed in another app. Which version do you want to keep?"
+msgstr "「{name}」已在其他應用程式中變更。你想保留哪個版本？"
+
+#: src/window.rs:1438
+msgid "Use Disk Version"
+msgstr "使用磁碟上的版本"
+
+#: src/window.rs:1441
+msgid "Keep Mine"
+msgstr "保留我的版本"
+
+#: src/window.rs:1470
+msgid "Unsaved Changes"
+msgstr "未儲存的變更"
+
+#: src/window.rs:1471
+#, python-brace-format
+msgid "“{name}” couldn’t be saved. Close it anyway and lose your changes?"
+msgstr "無法儲存「{name}」。仍要關閉並遺失變更嗎？"
+
+#: src/window.rs:1537
+#, python-brace-format
+msgid "File not found: {name}"
+msgstr "找不到檔案：{name}"
+
+#: src/window.rs:1669
+msgid "No results"
+msgstr "沒有結果"
+
+#: src/window.rs:1704
+#, python-brace-format
+msgid "{current} of {total}"
+msgstr "第 {current} 個，共 {total} 個"
+
+#: src/window.rs:1714
+msgid "less than 1 min read"
+msgstr "閱讀時間不到 1 分鐘"
+
+#: src/window.rs:1714
+msgid "0 min read"
+msgstr "閱讀時間 0 分鐘"
+
+#: src/window.rs:1718
+#, python-brace-format
+msgid "{n} min read"
+msgid_plural "{n} min read"
+msgstr[0] "閱讀時間 {n} 分鐘"
+
+#: src/window.rs:1722
+#, python-brace-format
+msgid "{hours} h {minutes} min read"
+msgstr "閱讀時間 {hours} 小時 {minutes} 分鐘"
+
+#: src/window.rs:1724
+#, python-brace-format
+msgid "{hours} h read"
+msgstr "閱讀時間 {hours} 小時"
+
+#: src/window.rs:1752
+#, python-brace-format
+msgid "{selected} of {total} word"
+msgid_plural "{selected} of {total} words"
+msgstr[0] "{selected} / {total} 字"
+
+#: src/window.rs:1758
+#, python-brace-format
+msgid "{n} word"
+msgid_plural "{n} words"
+msgstr[0] "{n} 字"
+
+#: src/window.rs:2293
+msgid "Path copied"
+msgstr "路徑已拷貝"
+
+#: src/window.rs:2333
+msgid "Source"
+msgstr "原始碼"
+
+#: src/window.rs:2333
+msgid "Show the Markdown source"
+msgstr "顯示 Markdown 原始碼"
+
+#: src/window.rs:2334
+msgid "Show the formatted document"
+msgstr "顯示套用格式的文件"
+
+#: src/window.rs:2335
+msgid "Split"
+msgstr "分割"
+
+#: src/window.rs:2335
+msgid "Show the source and the formatted document side by side"
+msgstr "並排顯示原始碼和套用格式的文件"
+
+#: src/window.rs:2365
+msgid "Font"
+msgstr "字體"
+
+#: src/window.rs:2369
+msgid "Show in Files"
+msgstr "在「檔案」中顯示"
+
+#: src/window.rs:2372
+msgid "About Amoxtli"
+msgstr "關於 Amoxtli"
+
+#: src/window.rs:2374
+msgid "Set as Default Markdown App"
+msgstr "設為預設 Markdown 應用程式"

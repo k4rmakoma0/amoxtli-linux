@@ -2,7 +2,7 @@
 name = "amoxtli"
 version = "1.1.0"
 edition = "2021"
-description = "A native Markdown viewer for GNOME and Linux"
+description = "A native Markdown editor for GNOME and Linux"
 license = "MIT"
 
 [dependencies]

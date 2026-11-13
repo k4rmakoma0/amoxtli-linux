@@ -7,137 +7,324 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: src/application.rs:127
+#: src/application.rs:96
+#, python-brace-format
+msgid "Text size {percent}%"
+msgstr "文字大小 {percent}%"
+
+#: src/application.rs:120 src/application.rs:320
+msgid "Larger Text"
+msgstr "放大文字"
+
+#: src/application.rs:121 src/application.rs:321
+msgid "Smaller Text"
+msgstr "缩小文字"
+
+#: src/application.rs:122 src/application.rs:322
+msgid "Normal Size"
+msgstr "默认大小"
+
+#: src/application.rs:252
 msgid "Install Amoxtli first (run ./install.sh)"
 msgstr "请先安装 Amoxtli（运行 ./install.sh）"
 
-#: src/application.rs:143
-msgid "Amoxtli is now the default Markdown viewer"
-msgstr "Amoxtli 现在是默认的 Markdown 查看器"
+#: src/application.rs:268
+msgid "Amoxtli is now your default Markdown app"
+msgstr "Amoxtli 现在是你的默认 Markdown 应用"
 
-#: src/application.rs:151
+#: src/application.rs:276
 msgid "Amoxtli Contributors"
 msgstr "Amoxtli 贡献者"
 
-#: src/application.rs:153
-msgid "A native Markdown viewer for GNOME and Linux."
-msgstr "适用于 GNOME 和 Linux 的原生 Markdown 查看器。"
+#: src/application.rs:278
+msgid "A native Markdown editor for GNOME and Linux."
+msgstr "适用于 GNOME 和 Linux 的原生 Markdown 编辑器。"
 
-#: src/application.rs:153
+#: src/application.rs:278
 msgid "Amoxtli means “book” in Nahuatl."
 msgstr "Amoxtli 在纳瓦特尔语中意为“书”。"
 
-#: src/application.rs:156
+#: src/application.rs:281
 msgid "translator-credits"
 msgstr ""
 
-#: src/application.rs:166
+#: src/application.rs:291
 msgid "General"
 msgstr "常规"
 
-#: src/application.rs:167 src/window.rs:128
+#: src/application.rs:292 src/window.rs:157 src/window.rs:166
 msgid "Open File"
 msgstr "打开文件"
 
-#: src/application.rs:168 src/window.rs:474
+#: src/application.rs:293 src/window.rs:702
 msgid "Open Folder"
 msgstr "打开文件夹"
 
-#: src/application.rs:169 src/window.rs:1014
+#: src/application.rs:294 src/window.rs:2363
 msgid "New Window"
 msgstr "新建窗口"
 
-#: src/application.rs:170
+#: src/application.rs:295
 msgid "Close Window"
 msgstr "关闭窗口"
 
-#: src/application.rs:171
+#: src/application.rs:296
 msgid "Quit"
 msgstr "退出"
 
-#: src/application.rs:172 src/window.rs:1023
+#: src/application.rs:297 src/window.rs:2372
 msgid "Keyboard Shortcuts"
 msgstr "键盘快捷键"
 
-#: src/application.rs:174
+#: src/application.rs:299
+msgid "Editing"
+msgstr "编辑"
+
+#: src/application.rs:300
+msgid "Save"
+msgstr "保存"
+
+#: src/application.rs:301
+msgid "Undo"
+msgstr "撤销"
+
+#: src/application.rs:302
+msgid "Redo"
+msgstr "重做"
+
+#: src/application.rs:303 src/window.rs:256
+msgid "Show Source"
+msgstr "显示源文本"
+
+#: src/application.rs:304
+msgid "Show Formatted"
+msgstr "显示格式"
+
+#: src/application.rs:305
+msgid "Show Split"
+msgstr "分栏显示"
+
+#: src/application.rs:307 src/editor/rich/mod.rs:208
 msgid "Document"
 msgstr "文档"
 
-#: src/application.rs:175 src/window.rs:142
+#: src/application.rs:308 src/window.rs:186 src/window.rs:2363
 msgid "Find"
 msgstr "查找"
 
-#: src/application.rs:176 src/window.rs:1014
+#: src/application.rs:309 src/window.rs:2363
 msgid "Reload"
 msgstr "重新加载"
 
-#: src/application.rs:177 src/window.rs:1017
+#: src/application.rs:310 src/window.rs:2368
 msgid "Edit in Text Editor"
 msgstr "在文本编辑器中编辑"
 
-#: src/application.rs:178 src/window.rs:1019
+#: src/application.rs:311 src/window.rs:2370
 msgid "Copy File Path"
 msgstr "复制文件路径"
 
-#: src/application.rs:179 src/window.rs:118
+#: src/application.rs:312 src/window.rs:147
 msgid "Back"
 msgstr "后退"
 
-#: src/application.rs:180 src/window.rs:120
+#: src/application.rs:313 src/window.rs:149
 msgid "Forward"
 msgstr "前进"
 
-#: src/application.rs:181
+#: src/application.rs:314
 msgid "Scroll to Top"
 msgstr "滚动到顶部"
 
-#: src/application.rs:183
+#: src/application.rs:316
 msgid "View"
 msgstr "视图"
 
-#: src/application.rs:184 src/window.rs:113
+#: src/application.rs:317 src/window.rs:142
 msgid "Toggle Sidebar"
 msgstr "切换侧边栏"
 
-#: src/application.rs:185
+#: src/application.rs:318
 msgid "Show Contents"
 msgstr "显示目录"
 
-#: src/application.rs:186
+#: src/application.rs:319
 msgid "Show Files"
 msgstr "显示文件"
 
-#: src/application.rs:187 src/window.rs:1015
-msgid "Zoom In"
-msgstr "放大"
+#: src/application.rs:336 src/editor/mod.rs:289 src/window.rs:2334
+msgid "Format"
+msgstr "格式"
 
-#: src/application.rs:188 src/window.rs:1015
-msgid "Zoom Out"
-msgstr "缩小"
-
-#: src/application.rs:189 src/window.rs:1015
-msgid "Reset Zoom"
-msgstr "重置缩放"
-
-#: src/document.rs:364
+#: src/document.rs:81
 msgid "Note"
 msgstr "注意"
 
-#: src/document.rs:365
+#: src/document.rs:82
 msgid "Tip"
 msgstr "提示"
 
-#: src/document.rs:366
+#: src/document.rs:83
 msgid "Important"
 msgstr "重要"
 
-#: src/document.rs:367
+#: src/document.rs:84
 msgid "Warning"
 msgstr "警告"
 
-#: src/document.rs:368
+#: src/document.rs:85
 msgid "Caution"
 msgstr "小心"
+
+#: src/editor/dialogs.rs:9
+msgid "Text to display"
+msgstr "显示的文本"
+
+#: src/editor/dialogs.rs:11
+msgid "Address"
+msgstr "地址"
+
+#: src/editor/dialogs.rs:19
+msgid "Insert Link"
+msgstr "插入链接"
+
+#: src/editor/dialogs.rs:20 src/editor/dialogs.rs:58 src/window.rs:1473
+msgid "Cancel"
+msgstr "取消"
+
+#: src/editor/dialogs.rs:20 src/editor/dialogs.rs:58
+msgid "Insert"
+msgstr "插入"
+
+#: src/editor/dialogs.rs:50
+msgid "Columns"
+msgstr "列数"
+
+#: src/editor/dialogs.rs:51
+msgid "Rows"
+msgstr "行数"
+
+#: src/editor/dialogs.rs:56
+msgid "The first row is the header."
+msgstr "第一行是表头。"
+
+#: src/editor/dialogs.rs:56
+msgid "Use 1–20 columns and 1–100 rows."
+msgstr "请输入1至20列和1至100行。"
+
+#: src/editor/dialogs.rs:57
+msgid "Insert Table"
+msgstr "插入表格"
+
+#: src/editor/dialogs.rs:68
+#, python-brace-format
+msgid "Column {n}"
+msgstr "第 {n} 列"
+
+#: src/editor/mod.rs:105
+msgid "Bold"
+msgstr "粗体"
+
+#: src/editor/mod.rs:106
+msgid "Italic"
+msgstr "斜体"
+
+#: src/editor/mod.rs:107
+msgid "Underline"
+msgstr "下划线"
+
+#: src/editor/mod.rs:108
+msgid "Strikethrough"
+msgstr "删除线"
+
+#: src/editor/mod.rs:109
+msgid "Code"
+msgstr "代码"
+
+#: src/editor/mod.rs:110
+msgid "Bulleted List"
+msgstr "项目符号列表"
+
+#: src/editor/mod.rs:111
+msgid "Numbered List"
+msgstr "编号列表"
+
+#: src/editor/mod.rs:112
+msgid "Quote"
+msgstr "引用"
+
+#: src/editor/mod.rs:113
+msgid "Link…"
+msgstr "链接…"
+
+#: src/editor/mod.rs:114
+msgid "Code Block"
+msgstr "代码块"
+
+#: src/editor/mod.rs:197
+msgid "Table…"
+msgstr "表格…"
+
+#: src/editor/mod.rs:198
+msgid "Horizontal Line"
+msgstr "分隔线"
+
+#: src/editor/mod.rs:219
+#, python-brace-format
+msgid "Heading {n}"
+msgstr "标题 {n}"
+
+#: src/editor/mod.rs:220
+msgid "Text"
+msgstr "正文"
+
+#: src/editor/mod.rs:313 src/editor/mod.rs:317
+msgid "Style"
+msgstr "样式"
+
+#: src/editor/overflow.rs:48
+msgid "More Formatting"
+msgstr "更多格式"
+
+#: src/editor/rich/draw.rs:393
+#, python-brace-format
+msgid "Task, done, level {level}"
+msgstr "任务，已完成，第 {level} 级"
+
+#: src/editor/rich/draw.rs:394
+#, python-brace-format
+msgid "Task, not done, level {level}"
+msgstr "任务，未完成，第 {level} 级"
+
+#: src/editor/rich/draw.rs:395
+#, python-brace-format
+msgid "{number}, level {level}"
+msgstr "{number}，第 {level} 级"
+
+#: src/editor/rich/draw.rs:396
+#, python-brace-format
+msgid "Bullet, level {level}"
+msgstr "项目符号，第 {level} 级"
+
+#: src/editor/rich/keys.rs:369
+msgid "Ctrl+click to open"
+msgstr "按住 Ctrl 点击以打开"
+
+#: src/editor/rich/language.rs:120
+msgid "Choose Language"
+msgstr "选择语言"
+
+#: src/editor/rich/language.rs:210
+msgid "None"
+msgstr "无"
+
+#: src/editor/rich/language.rs:237
+msgid "Language"
+msgstr "语言"
+
+#: src/editor/source_view.rs:96
+msgid "Markdown"
+msgstr "Markdown"
 
 #: src/sidebar.rs:42
 msgid "No Headings"
@@ -147,7 +334,7 @@ msgstr "没有标题"
 msgid "This document has no table of contents"
 msgstr "此文档没有目录"
 
-#: src/sidebar.rs:191 src/window.rs:123 src/window.rs:178
+#: src/sidebar.rs:191 src/window.rs:152 src/window.rs:240
 msgid "Open Folder…"
 msgstr "打开文件夹…"
 
@@ -159,161 +346,274 @@ msgstr "没有文件夹"
 msgid "Open a folder to browse its Markdown files"
 msgstr "打开文件夹以浏览其中的 Markdown 文件"
 
-#: src/window.rs:102
+#: src/typography.rs:40
+msgid "System"
+msgstr "系统"
+
+#: src/typography.rs:41
+msgid "Serif"
+msgstr "衬线"
+
+#: src/typography.rs:42
+msgid "Monospace"
+msgstr "等宽"
+
+#: src/typography.rs:43
+msgid "Rounded"
+msgstr "圆体"
+
+#: src/window.rs:131
 msgid "Contents"
 msgstr "目录"
 
-#: src/window.rs:102
+#: src/window.rs:131
 msgid "Table of Contents"
 msgstr "目录"
 
-#: src/window.rs:103
+#: src/window.rs:132
 msgid "Files"
 msgstr "文件"
 
-#: src/window.rs:103
+#: src/window.rs:132
 msgid "Folder"
 msgstr "文件夹"
 
-#: src/window.rs:125
+#: src/window.rs:154
 msgid "Open"
 msgstr "打开"
 
-#: src/window.rs:129
+#: src/window.rs:158 src/window.rs:167
 msgid "More Open Options"
 msgstr "更多打开选项"
 
-#: src/window.rs:138
+#: src/window.rs:182
 msgid "Main Menu"
 msgstr "主菜单"
 
-#: src/window.rs:147
+#: src/window.rs:192
+msgid "Font and Text Size"
+msgstr "字体和文字大小"
+
+#: src/window.rs:197
 msgid "Find in document"
 msgstr "在文档中查找"
 
-#: src/window.rs:150
+#: src/window.rs:200
 msgid "Previous Match"
 msgstr "上一个匹配"
 
-#: src/window.rs:152
+#: src/window.rs:202
 msgid "Next Match"
 msgstr "下一个匹配"
 
-#: src/window.rs:173
+#: src/window.rs:235
 msgid "Open a Markdown file or a folder of notes."
 msgstr "打开一个 Markdown 文件或笔记文件夹。"
 
-#: src/window.rs:173
+#: src/window.rs:235
 msgid "You can also drop files here."
 msgstr "也可以将文件拖放到这里。"
 
-#: src/window.rs:176
+#: src/window.rs:238
 msgid "Open File…"
 msgstr "打开文件…"
 
-#: src/window.rs:183
+#: src/window.rs:245
 msgid "Choose a Document"
 msgstr "选择文档"
 
-#: src/window.rs:184
+#: src/window.rs:246
 msgid "Select a Markdown file from the sidebar"
 msgstr "从侧边栏选择一个 Markdown 文件"
 
-#: src/window.rs:186
+#: src/window.rs:248 src/window.rs:758
 msgid "Unable to Open File"
 msgstr "无法打开文件"
 
-#: src/window.rs:194
-msgid "Amoxtli is not your default Markdown viewer"
-msgstr "Amoxtli 不是您的默认 Markdown 查看器"
+#: src/window.rs:254
+msgid "Document Too Large"
+msgstr "文稿过大"
 
-#: src/window.rs:195
+#: src/window.rs:265
+msgid "Amoxtli is not your default Markdown app"
+msgstr "Amoxtli 不是你的默认 Markdown 应用"
+
+#: src/window.rs:266
 msgid "Make Default"
 msgstr "设为默认"
 
-#: src/window.rs:438
+#: src/window.rs:666
 msgid "Markdown Documents"
 msgstr "Markdown 文档"
 
-#: src/window.rs:446
+#: src/window.rs:674
 msgid "Text Files"
 msgstr "文本文件"
 
-#: src/window.rs:449
+#: src/window.rs:677
 msgid "All Files"
 msgstr "所有文件"
 
-#: src/window.rs:456
+#: src/window.rs:684
 msgid "Open Markdown File"
 msgstr "打开 Markdown 文件"
 
-#: src/window.rs:711
+#: src/window.rs:764
+msgid "Invalid Encoding"
+msgstr "编码无效"
+
+#: src/window.rs:767
+msgid "This file isn't UTF-8 text, so Amoxtli can't show or edit it. It hasn't been changed."
+msgstr "此文件不是 UTF-8 文本，Amoxtli 无法显示或编辑它。文件未被更改。"
+
+#: src/window.rs:923
+#, python-brace-format
+msgid "This document takes {size}. The formatted view handles documents up to {limit}; you can read and edit it in the source."
+msgstr "此文档大小为 {size}。带格式视图支持最大 {limit} 的文档；你可以在源文本中阅读和编辑它。"
+
+#: src/window.rs:1310
+#, python-brace-format
+msgid "Couldn’t save “{name}”. Check that you have permission to change it."
+msgstr "无法保存“{name}”。请检查你是否有权修改它。"
+
+#: src/window.rs:1381
+msgid "File Not Found"
+msgstr "未找到文件"
+
+#: src/window.rs:1381
+#, python-brace-format
+msgid "“{name}” was moved or deleted."
+msgstr "“{name}”已被移动或删除。"
+
+#: src/window.rs:1388
+msgid "File Deleted"
+msgstr "文件已删除"
+
+#: src/window.rs:1389
+#, python-brace-format
+msgid "“{name}” was moved or deleted in another app. Save your version again?"
+msgstr "“{name}”已在其他应用中被移动或删除。要重新保存你的版本吗？"
+
+#: src/window.rs:1391 src/window.rs:1473
+msgid "Discard Changes"
+msgstr "放弃更改"
+
+#: src/window.rs:1391
+msgid "Save Again"
+msgstr "重新保存"
+
+#: src/window.rs:1431
+msgid "File Changed on Disk"
+msgstr "磁盘上的文件已更改"
+
+#: src/window.rs:1433
+#, python-brace-format
+msgid "“{name}” was changed in another app. Which version do you want to keep?"
+msgstr "“{name}”已在其他应用中更改。你想保留哪个版本？"
+
+#: src/window.rs:1438
+msgid "Use Disk Version"
+msgstr "使用磁盘上的版本"
+
+#: src/window.rs:1441
+msgid "Keep Mine"
+msgstr "保留我的版本"
+
+#: src/window.rs:1470
+msgid "Unsaved Changes"
+msgstr "未保存的更改"
+
+#: src/window.rs:1471
+#, python-brace-format
+msgid "“{name}” couldn’t be saved. Close it anyway and lose your changes?"
+msgstr "无法保存“{name}”。仍要关闭并丢失更改吗？"
+
+#: src/window.rs:1537
 #, python-brace-format
 msgid "File not found: {name}"
 msgstr "未找到文件：{name}"
 
-#: src/window.rs:798
+#: src/window.rs:1669
 msgid "No results"
 msgstr "无结果"
 
-#: src/window.rs:832
+#: src/window.rs:1704
 #, python-brace-format
 msgid "{current} of {total}"
 msgstr "第 {current} 个，共 {total} 个"
 
-#: src/window.rs:842
+#: src/window.rs:1714
 msgid "less than 1 min read"
 msgstr "阅读时间不到 1 分钟"
 
-#: src/window.rs:842
+#: src/window.rs:1714
 msgid "0 min read"
 msgstr "阅读时间 0 分钟"
 
-#: src/window.rs:846
+#: src/window.rs:1718
 #, python-brace-format
 msgid "{n} min read"
 msgid_plural "{n} min read"
 msgstr[0] "阅读时间 {n} 分钟"
 
-#: src/window.rs:850
+#: src/window.rs:1722
 #, python-brace-format
 msgid "{hours} h {minutes} min read"
 msgstr "阅读时间 {hours} 小时 {minutes} 分钟"
 
-#: src/window.rs:852
+#: src/window.rs:1724
 #, python-brace-format
 msgid "{hours} h read"
 msgstr "阅读时间 {hours} 小时"
 
-#: src/window.rs:877
+#: src/window.rs:1752
 #, python-brace-format
 msgid "{selected} of {total} word"
 msgid_plural "{selected} of {total} words"
 msgstr[0] "{selected} / {total} 字"
 
-#: src/window.rs:883
+#: src/window.rs:1758
 #, python-brace-format
 msgid "{n} word"
 msgid_plural "{n} words"
 msgstr[0] "{n} 字"
 
-#: src/window.rs:901
-#, python-brace-format
-msgid "Zoom {percent}%"
-msgstr "缩放 {percent}%"
-
-#: src/window.rs:975
+#: src/window.rs:2293
 msgid "Path copied"
 msgstr "路径已复制"
 
-#: src/window.rs:1018
+#: src/window.rs:2333
+msgid "Source"
+msgstr "源文本"
+
+#: src/window.rs:2333
+msgid "Show the Markdown source"
+msgstr "显示 Markdown 源文本"
+
+#: src/window.rs:2334
+msgid "Show the formatted document"
+msgstr "显示带格式的文档"
+
+#: src/window.rs:2335
+msgid "Split"
+msgstr "分栏"
+
+#: src/window.rs:2335
+msgid "Show the source and the formatted document side by side"
+msgstr "并排显示源文本和带格式的文档"
+
+#: src/window.rs:2365
+msgid "Font"
+msgstr "字体"
+
+#: src/window.rs:2369
 msgid "Show in Files"
 msgstr "在文件中显示"
 
-#: src/window.rs:1022
-msgid "Set as Default Markdown Viewer"
-msgstr "设为默认 Markdown 查看器"
-
-#: src/window.rs:1024
+#: src/window.rs:2372
 msgid "About Amoxtli"
 msgstr "关于 Amoxtli"
+
+#: src/window.rs:2374
+msgid "Set as Default Markdown App"
+msgstr "设为默认 Markdown 应用"

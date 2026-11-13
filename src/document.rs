@@ -15,26 +15,49 @@ pub struct Heading {
     pub mark: gtk::TextMark,
 }
 
-/// Where each heading starts in the source, in characters, in the order the formatted
-/// editor lists them, so the source editor can go to the one picked in the Contents panel.
-/// Headings inside footnote definitions don't count: the formatted editor keeps those as written.
-pub fn heading_offsets(source: &str) -> Vec<i32> {
-    let mut offsets = vec![];
+/// A heading as the source has it: level, title, `{#id}` if any, and where it starts.
+pub struct SourceHeading {
+    pub level: u8,
+    pub title: String,
+    pub id: Option<String>,
+    /// In characters.
+    pub offset: i32,
+}
+
+/// The headings of a source, in the order the formatted editor lists them. Headings inside
+/// footnote definitions don't count: the formatted editor keeps those as written.
+pub fn source_headings(source: &str) -> Vec<SourceHeading> {
+    let mut headings: Vec<SourceHeading> = vec![];
     let (mut byte, mut chars) = (0, 0);
     let mut footnote = 0;
+    let mut open = false;
     for (event, range) in Parser::new_ext(source, parse::options()).into_offset_iter() {
         match event {
             Event::Start(Tag::FootnoteDefinition(_)) => footnote += 1,
             Event::End(TagEnd::FootnoteDefinition) => footnote -= 1,
-            Event::Start(Tag::Heading { .. }) if footnote == 0 => {
+            Event::Start(Tag::Heading { level, id, .. }) if footnote == 0 => {
                 chars += source[byte..range.start].chars().count();
                 byte = range.start;
-                offsets.push(chars as i32);
+                headings.push(SourceHeading { level: level as u8, title: String::new(), id: id.map(|i| i.to_string()), offset: chars as i32 });
+                open = true;
+            }
+            Event::End(TagEnd::Heading(_)) => open = false,
+            Event::Text(t) | Event::Code(t) if open => {
+                if let Some(h) = headings.last_mut() {
+                    h.title.push_str(&t);
+                }
             }
             _ => {}
         }
     }
-    offsets
+    headings
+}
+
+/// Where each heading starts in the source, in characters, in the order the formatted
+/// editor lists them, so the source editor can go to the one picked in the Contents panel.
+#[cfg(test)]
+pub fn heading_offsets(source: &str) -> Vec<i32> {
+    source_headings(source).into_iter().map(|h| h.offset).collect()
 }
 
 pub fn alert_color(kind: BlockQuoteKind, dark: bool) -> gdk::RGBA {
@@ -136,6 +159,13 @@ mod tests {
         let doc = parse::parse(text);
         let headings = doc.paragraphs.iter().filter(|p| p.kind.block.heading_level() > 0).count();
         assert_eq!(heading_offsets(text).len(), headings);
+    }
+
+    #[test]
+    fn source_headings_have_titles_and_ids() {
+        let h = source_headings("# Uno `dos`\n\ntext\n\n## Tres {#three}\n");
+        assert_eq!(h.iter().map(|h| (h.level, h.title.as_str(), h.id.as_deref())).collect::<Vec<_>>(),
+            [(1, "Uno dos", None), (2, "Tres", Some("three"))]);
     }
 
     #[test]

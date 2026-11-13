@@ -7,137 +7,324 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: src/application.rs:127
+#: src/application.rs:96
+#, python-brace-format
+msgid "Text size {percent}%"
+msgstr "Размер текста {percent}%"
+
+#: src/application.rs:120 src/application.rs:320
+msgid "Larger Text"
+msgstr "Крупнее"
+
+#: src/application.rs:121 src/application.rs:321
+msgid "Smaller Text"
+msgstr "Мельче"
+
+#: src/application.rs:122 src/application.rs:322
+msgid "Normal Size"
+msgstr "Обычный размер"
+
+#: src/application.rs:252
 msgid "Install Amoxtli first (run ./install.sh)"
 msgstr "Сначала установите Amoxtli (запустите ./install.sh)"
 
-#: src/application.rs:143
-msgid "Amoxtli is now the default Markdown viewer"
-msgstr "Amoxtli теперь просмотрщик Markdown по умолчанию"
+#: src/application.rs:268
+msgid "Amoxtli is now your default Markdown app"
+msgstr "Amoxtli теперь приложение по умолчанию для Markdown"
 
-#: src/application.rs:151
+#: src/application.rs:276
 msgid "Amoxtli Contributors"
 msgstr "Участники проекта Amoxtli"
 
-#: src/application.rs:153
-msgid "A native Markdown viewer for GNOME and Linux."
-msgstr "Нативный просмотрщик Markdown для GNOME и Linux."
+#: src/application.rs:278
+msgid "A native Markdown editor for GNOME and Linux."
+msgstr "Нативный редактор Markdown для GNOME и Linux."
 
-#: src/application.rs:153
+#: src/application.rs:278
 msgid "Amoxtli means “book” in Nahuatl."
 msgstr "Amoxtli означает «книга» на языке науатль."
 
-#: src/application.rs:156
+#: src/application.rs:281
 msgid "translator-credits"
 msgstr ""
 
-#: src/application.rs:166
+#: src/application.rs:291
 msgid "General"
 msgstr "Общие"
 
-#: src/application.rs:167 src/window.rs:128
+#: src/application.rs:292 src/window.rs:157 src/window.rs:166
 msgid "Open File"
 msgstr "Открыть файл"
 
-#: src/application.rs:168 src/window.rs:474
+#: src/application.rs:293 src/window.rs:702
 msgid "Open Folder"
 msgstr "Открыть папку"
 
-#: src/application.rs:169 src/window.rs:1014
+#: src/application.rs:294 src/window.rs:2363
 msgid "New Window"
 msgstr "Новое окно"
 
-#: src/application.rs:170
+#: src/application.rs:295
 msgid "Close Window"
 msgstr "Закрыть окно"
 
-#: src/application.rs:171
+#: src/application.rs:296
 msgid "Quit"
 msgstr "Выйти"
 
-#: src/application.rs:172 src/window.rs:1023
+#: src/application.rs:297 src/window.rs:2372
 msgid "Keyboard Shortcuts"
 msgstr "Комбинации клавиш"
 
-#: src/application.rs:174
+#: src/application.rs:299
+msgid "Editing"
+msgstr "Правка"
+
+#: src/application.rs:300
+msgid "Save"
+msgstr "Сохранить"
+
+#: src/application.rs:301
+msgid "Undo"
+msgstr "Отменить"
+
+#: src/application.rs:302
+msgid "Redo"
+msgstr "Повторить"
+
+#: src/application.rs:303 src/window.rs:256
+msgid "Show Source"
+msgstr "Показать исходный текст"
+
+#: src/application.rs:304
+msgid "Show Formatted"
+msgstr "Показать с форматированием"
+
+#: src/application.rs:305
+msgid "Show Split"
+msgstr "Показать разделенным"
+
+#: src/application.rs:307 src/editor/rich/mod.rs:208
 msgid "Document"
 msgstr "Документ"
 
-#: src/application.rs:175 src/window.rs:142
+#: src/application.rs:308 src/window.rs:186 src/window.rs:2363
 msgid "Find"
 msgstr "Найти"
 
-#: src/application.rs:176 src/window.rs:1014
+#: src/application.rs:309 src/window.rs:2363
 msgid "Reload"
 msgstr "Перезагрузить"
 
-#: src/application.rs:177 src/window.rs:1017
+#: src/application.rs:310 src/window.rs:2368
 msgid "Edit in Text Editor"
 msgstr "Изменить в текстовом редакторе"
 
-#: src/application.rs:178 src/window.rs:1019
+#: src/application.rs:311 src/window.rs:2370
 msgid "Copy File Path"
 msgstr "Копировать путь к файлу"
 
-#: src/application.rs:179 src/window.rs:118
+#: src/application.rs:312 src/window.rs:147
 msgid "Back"
 msgstr "Назад"
 
-#: src/application.rs:180 src/window.rs:120
+#: src/application.rs:313 src/window.rs:149
 msgid "Forward"
 msgstr "Вперёд"
 
-#: src/application.rs:181
+#: src/application.rs:314
 msgid "Scroll to Top"
 msgstr "Прокрутить в начало"
 
-#: src/application.rs:183
+#: src/application.rs:316
 msgid "View"
 msgstr "Вид"
 
-#: src/application.rs:184 src/window.rs:113
+#: src/application.rs:317 src/window.rs:142
 msgid "Toggle Sidebar"
 msgstr "Показать или скрыть боковую панель"
 
-#: src/application.rs:185
+#: src/application.rs:318
 msgid "Show Contents"
 msgstr "Показать содержание"
 
-#: src/application.rs:186
+#: src/application.rs:319
 msgid "Show Files"
 msgstr "Показать файлы"
 
-#: src/application.rs:187 src/window.rs:1015
-msgid "Zoom In"
-msgstr "Увеличить"
+#: src/application.rs:336 src/editor/mod.rs:289 src/window.rs:2334
+msgid "Format"
+msgstr "Формат"
 
-#: src/application.rs:188 src/window.rs:1015
-msgid "Zoom Out"
-msgstr "Уменьшить"
-
-#: src/application.rs:189 src/window.rs:1015
-msgid "Reset Zoom"
-msgstr "Сбросить масштаб"
-
-#: src/document.rs:364
+#: src/document.rs:81
 msgid "Note"
 msgstr "Примечание"
 
-#: src/document.rs:365
+#: src/document.rs:82
 msgid "Tip"
 msgstr "Совет"
 
-#: src/document.rs:366
+#: src/document.rs:83
 msgid "Important"
 msgstr "Важно"
 
-#: src/document.rs:367
+#: src/document.rs:84
 msgid "Warning"
 msgstr "Предупреждение"
 
-#: src/document.rs:368
+#: src/document.rs:85
 msgid "Caution"
 msgstr "Осторожно"
+
+#: src/editor/dialogs.rs:9
+msgid "Text to display"
+msgstr "Отображаемый текст"
+
+#: src/editor/dialogs.rs:11
+msgid "Address"
+msgstr "Адрес"
+
+#: src/editor/dialogs.rs:19
+msgid "Insert Link"
+msgstr "Вставить ссылку"
+
+#: src/editor/dialogs.rs:20 src/editor/dialogs.rs:58 src/window.rs:1473
+msgid "Cancel"
+msgstr "Отменить"
+
+#: src/editor/dialogs.rs:20 src/editor/dialogs.rs:58
+msgid "Insert"
+msgstr "Вставить"
+
+#: src/editor/dialogs.rs:50
+msgid "Columns"
+msgstr "Столбцы"
+
+#: src/editor/dialogs.rs:51
+msgid "Rows"
+msgstr "Строки"
+
+#: src/editor/dialogs.rs:56
+msgid "The first row is the header."
+msgstr "Первая строка — заголовок таблицы."
+
+#: src/editor/dialogs.rs:56
+msgid "Use 1–20 columns and 1–100 rows."
+msgstr "Укажите от 1 до 20 столбцов и от 1 до 100 строк."
+
+#: src/editor/dialogs.rs:57
+msgid "Insert Table"
+msgstr "Вставить таблицу"
+
+#: src/editor/dialogs.rs:68
+#, python-brace-format
+msgid "Column {n}"
+msgstr "Столбец {n}"
+
+#: src/editor/mod.rs:105
+msgid "Bold"
+msgstr "Жирный"
+
+#: src/editor/mod.rs:106
+msgid "Italic"
+msgstr "Курсив"
+
+#: src/editor/mod.rs:107
+msgid "Underline"
+msgstr "Подчеркнутый"
+
+#: src/editor/mod.rs:108
+msgid "Strikethrough"
+msgstr "Зачеркнутый"
+
+#: src/editor/mod.rs:109
+msgid "Code"
+msgstr "Код"
+
+#: src/editor/mod.rs:110
+msgid "Bulleted List"
+msgstr "Маркированный список"
+
+#: src/editor/mod.rs:111
+msgid "Numbered List"
+msgstr "Нумерованный список"
+
+#: src/editor/mod.rs:112
+msgid "Quote"
+msgstr "Цитата"
+
+#: src/editor/mod.rs:113
+msgid "Link…"
+msgstr "Ссылка…"
+
+#: src/editor/mod.rs:114
+msgid "Code Block"
+msgstr "Блок кода"
+
+#: src/editor/mod.rs:197
+msgid "Table…"
+msgstr "Таблица…"
+
+#: src/editor/mod.rs:198
+msgid "Horizontal Line"
+msgstr "Горизонтальная линия"
+
+#: src/editor/mod.rs:219
+#, python-brace-format
+msgid "Heading {n}"
+msgstr "Заголовок {n}"
+
+#: src/editor/mod.rs:220
+msgid "Text"
+msgstr "Текст"
+
+#: src/editor/mod.rs:313 src/editor/mod.rs:317
+msgid "Style"
+msgstr "Стиль"
+
+#: src/editor/overflow.rs:48
+msgid "More Formatting"
+msgstr "Ещё форматирование"
+
+#: src/editor/rich/draw.rs:393
+#, python-brace-format
+msgid "Task, done, level {level}"
+msgstr "Задача, выполнена, уровень {level}"
+
+#: src/editor/rich/draw.rs:394
+#, python-brace-format
+msgid "Task, not done, level {level}"
+msgstr "Задача, не выполнена, уровень {level}"
+
+#: src/editor/rich/draw.rs:395
+#, python-brace-format
+msgid "{number}, level {level}"
+msgstr "{number}, уровень {level}"
+
+#: src/editor/rich/draw.rs:396
+#, python-brace-format
+msgid "Bullet, level {level}"
+msgstr "Маркер, уровень {level}"
+
+#: src/editor/rich/keys.rs:369
+msgid "Ctrl+click to open"
+msgstr "Ctrl+щелчок, чтобы открыть"
+
+#: src/editor/rich/language.rs:120
+msgid "Choose Language"
+msgstr "Выбрать язык"
+
+#: src/editor/rich/language.rs:210
+msgid "None"
+msgstr "Нет"
+
+#: src/editor/rich/language.rs:237
+msgid "Language"
+msgstr "Язык"
+
+#: src/editor/source_view.rs:96
+msgid "Markdown"
+msgstr "Markdown"
 
 #: src/sidebar.rs:42
 msgid "No Headings"
@@ -147,7 +334,7 @@ msgstr "Нет заголовков"
 msgid "This document has no table of contents"
 msgstr "В этом документе нет содержания"
 
-#: src/sidebar.rs:191 src/window.rs:123 src/window.rs:178
+#: src/sidebar.rs:191 src/window.rs:152 src/window.rs:240
 msgid "Open Folder…"
 msgstr "Открыть папку…"
 
@@ -159,117 +346,211 @@ msgstr "Нет папки"
 msgid "Open a folder to browse its Markdown files"
 msgstr "Откройте папку, чтобы просмотреть файлы Markdown"
 
-#: src/window.rs:102
+#: src/typography.rs:40
+msgid "System"
+msgstr "Системный"
+
+#: src/typography.rs:41
+msgid "Serif"
+msgstr "С засечками"
+
+#: src/typography.rs:42
+msgid "Monospace"
+msgstr "Моноширинный"
+
+#: src/typography.rs:43
+msgid "Rounded"
+msgstr "Скругленный"
+
+#: src/window.rs:131
 msgid "Contents"
 msgstr "Содержание"
 
-#: src/window.rs:102
+#: src/window.rs:131
 msgid "Table of Contents"
 msgstr "Оглавление"
 
-#: src/window.rs:103
+#: src/window.rs:132
 msgid "Files"
 msgstr "Файлы"
 
-#: src/window.rs:103
+#: src/window.rs:132
 msgid "Folder"
 msgstr "Папка"
 
-#: src/window.rs:125
+#: src/window.rs:154
 msgid "Open"
 msgstr "Открыть"
 
-#: src/window.rs:129
+#: src/window.rs:158 src/window.rs:167
 msgid "More Open Options"
 msgstr "Другие варианты открытия"
 
-#: src/window.rs:138
+#: src/window.rs:182
 msgid "Main Menu"
 msgstr "Главное меню"
 
-#: src/window.rs:147
+#: src/window.rs:192
+msgid "Font and Text Size"
+msgstr "Шрифт и размер текста"
+
+#: src/window.rs:197
 msgid "Find in document"
 msgstr "Найти в документе"
 
-#: src/window.rs:150
+#: src/window.rs:200
 msgid "Previous Match"
 msgstr "Предыдущее совпадение"
 
-#: src/window.rs:152
+#: src/window.rs:202
 msgid "Next Match"
 msgstr "Следующее совпадение"
 
-#: src/window.rs:173
+#: src/window.rs:235
 msgid "Open a Markdown file or a folder of notes."
 msgstr "Откройте файл Markdown или папку с заметками."
 
-#: src/window.rs:173
+#: src/window.rs:235
 msgid "You can also drop files here."
 msgstr "Также можно перетащить файлы сюда."
 
-#: src/window.rs:176
+#: src/window.rs:238
 msgid "Open File…"
 msgstr "Открыть файл…"
 
-#: src/window.rs:183
+#: src/window.rs:245
 msgid "Choose a Document"
 msgstr "Выберите документ"
 
-#: src/window.rs:184
+#: src/window.rs:246
 msgid "Select a Markdown file from the sidebar"
 msgstr "Выберите файл Markdown на боковой панели"
 
-#: src/window.rs:186
+#: src/window.rs:248 src/window.rs:758
 msgid "Unable to Open File"
 msgstr "Не удалось открыть файл"
 
-#: src/window.rs:194
-msgid "Amoxtli is not your default Markdown viewer"
-msgstr "Amoxtli не является просмотрщиком Markdown по умолчанию"
+#: src/window.rs:254
+msgid "Document Too Large"
+msgstr "Документ слишком большой"
 
-#: src/window.rs:195
+#: src/window.rs:265
+msgid "Amoxtli is not your default Markdown app"
+msgstr "Amoxtli не является приложением по умолчанию для Markdown"
+
+#: src/window.rs:266
 msgid "Make Default"
 msgstr "Сделать основным"
 
-#: src/window.rs:438
+#: src/window.rs:666
 msgid "Markdown Documents"
 msgstr "Документы Markdown"
 
-#: src/window.rs:446
+#: src/window.rs:674
 msgid "Text Files"
 msgstr "Текстовые файлы"
 
-#: src/window.rs:449
+#: src/window.rs:677
 msgid "All Files"
 msgstr "Все файлы"
 
-#: src/window.rs:456
+#: src/window.rs:684
 msgid "Open Markdown File"
 msgstr "Открыть файл Markdown"
 
-#: src/window.rs:711
+#: src/window.rs:764
+msgid "Invalid Encoding"
+msgstr "Недопустимая кодировка"
+
+#: src/window.rs:767
+msgid "This file isn't UTF-8 text, so Amoxtli can't show or edit it. It hasn't been changed."
+msgstr "Этот файл не является текстом в UTF-8, поэтому Amoxtli не может показать или изменить его. Файл не изменён."
+
+#: src/window.rs:923
+#, python-brace-format
+msgid "This document takes {size}. The formatted view handles documents up to {limit}; you can read and edit it in the source."
+msgstr "Размер документа — {size}. Оформленный вид поддерживает документы до {limit}; его можно читать и редактировать в исходном тексте."
+
+#: src/window.rs:1310
+#, python-brace-format
+msgid "Couldn’t save “{name}”. Check that you have permission to change it."
+msgstr "Не удалось сохранить «{name}». Проверьте, есть ли у вас права на его изменение."
+
+#: src/window.rs:1381
+msgid "File Not Found"
+msgstr "Файл не найден"
+
+#: src/window.rs:1381
+#, python-brace-format
+msgid "“{name}” was moved or deleted."
+msgstr "«{name}» перемещён или удалён."
+
+#: src/window.rs:1388
+msgid "File Deleted"
+msgstr "Файл удалён"
+
+#: src/window.rs:1389
+#, python-brace-format
+msgid "“{name}” was moved or deleted in another app. Save your version again?"
+msgstr "«{name}» перемещён или удалён в другом приложении. Сохранить вашу версию снова?"
+
+#: src/window.rs:1391 src/window.rs:1473
+msgid "Discard Changes"
+msgstr "Отменить изменения"
+
+#: src/window.rs:1391
+msgid "Save Again"
+msgstr "Сохранить снова"
+
+#: src/window.rs:1431
+msgid "File Changed on Disk"
+msgstr "Файл изменён на диске"
+
+#: src/window.rs:1433
+#, python-brace-format
+msgid "“{name}” was changed in another app. Which version do you want to keep?"
+msgstr "«{name}» изменён в другом приложении. Какую версию оставить?"
+
+#: src/window.rs:1438
+msgid "Use Disk Version"
+msgstr "Использовать версию с диска"
+
+#: src/window.rs:1441
+msgid "Keep Mine"
+msgstr "Оставить мою"
+
+#: src/window.rs:1470
+msgid "Unsaved Changes"
+msgstr "Несохранённые изменения"
+
+#: src/window.rs:1471
+#, python-brace-format
+msgid "“{name}” couldn’t be saved. Close it anyway and lose your changes?"
+msgstr "Не удалось сохранить «{name}». Всё равно закрыть и потерять изменения?"
+
+#: src/window.rs:1537
 #, python-brace-format
 msgid "File not found: {name}"
 msgstr "Файл не найден: {name}"
 
-#: src/window.rs:798
+#: src/window.rs:1669
 msgid "No results"
 msgstr "Ничего не найдено"
 
-#: src/window.rs:832
+#: src/window.rs:1704
 #, python-brace-format
 msgid "{current} of {total}"
 msgstr "{current} из {total}"
 
-#: src/window.rs:842
+#: src/window.rs:1714
 msgid "less than 1 min read"
 msgstr "меньше 1 мин чтения"
 
-#: src/window.rs:842
+#: src/window.rs:1714
 msgid "0 min read"
 msgstr "0 мин чтения"
 
-#: src/window.rs:846
+#: src/window.rs:1718
 #, python-brace-format
 msgid "{n} min read"
 msgid_plural "{n} min read"
@@ -277,17 +558,17 @@ msgstr[0] "{n} мин чтения"
 msgstr[1] "{n} мин чтения"
 msgstr[2] "{n} мин чтения"
 
-#: src/window.rs:850
+#: src/window.rs:1722
 #, python-brace-format
 msgid "{hours} h {minutes} min read"
 msgstr "{hours} ч {minutes} мин чтения"
 
-#: src/window.rs:852
+#: src/window.rs:1724
 #, python-brace-format
 msgid "{hours} h read"
 msgstr "{hours} ч чтения"
 
-#: src/window.rs:877
+#: src/window.rs:1752
 #, python-brace-format
 msgid "{selected} of {total} word"
 msgid_plural "{selected} of {total} words"
@@ -295,7 +576,7 @@ msgstr[0] "{selected} из {total} слова"
 msgstr[1] "{selected} из {total} слов"
 msgstr[2] "{selected} из {total} слов"
 
-#: src/window.rs:883
+#: src/window.rs:1758
 #, python-brace-format
 msgid "{n} word"
 msgid_plural "{n} words"
@@ -303,23 +584,42 @@ msgstr[0] "{n} слово"
 msgstr[1] "{n} слова"
 msgstr[2] "{n} слов"
 
-#: src/window.rs:901
-#, python-brace-format
-msgid "Zoom {percent}%"
-msgstr "Масштаб {percent} %"
-
-#: src/window.rs:975
+#: src/window.rs:2293
 msgid "Path copied"
 msgstr "Путь скопирован"
 
-#: src/window.rs:1018
+#: src/window.rs:2333
+msgid "Source"
+msgstr "Исходный текст"
+
+#: src/window.rs:2333
+msgid "Show the Markdown source"
+msgstr "Показать исходный Markdown"
+
+#: src/window.rs:2334
+msgid "Show the formatted document"
+msgstr "Показать оформленный документ"
+
+#: src/window.rs:2335
+msgid "Split"
+msgstr "Разделенный"
+
+#: src/window.rs:2335
+msgid "Show the source and the formatted document side by side"
+msgstr "Показать исходный текст и оформленный документ рядом"
+
+#: src/window.rs:2365
+msgid "Font"
+msgstr "Шрифт"
+
+#: src/window.rs:2369
 msgid "Show in Files"
 msgstr "Показать в «Файлах»"
 
-#: src/window.rs:1022
-msgid "Set as Default Markdown Viewer"
-msgstr "Сделать просмотрщиком Markdown по умолчанию"
-
-#: src/window.rs:1024
+#: src/window.rs:2372
 msgid "About Amoxtli"
 msgstr "О программе Amoxtli"
+
+#: src/window.rs:2374
+msgid "Set as Default Markdown App"
+msgstr "Сделать приложением по умолчанию для Markdown"

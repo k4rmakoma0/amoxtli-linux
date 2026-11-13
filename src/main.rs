@@ -1,4 +1,4 @@
-//! Amoxtli — a native Markdown viewer for Linux (GTK 4 + libadwaita).
+//! Amoxtli — a native Markdown editor for Linux (GTK 4 + libadwaita).
 
 mod application;
 mod config;
