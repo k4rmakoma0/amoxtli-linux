@@ -488,3 +488,15 @@ impl SourceView {
         buf.place_cursor(&buf.iter_at_offset(offset));
     }
 }
+
+impl SourceView {
+    /// Where each top-level block of the given character offsets starts, as the scroll
+    /// offset that puts it at the top of the view.
+    pub fn offsets_of(&self, starts: &[usize]) -> Vec<f64> {
+        let buf = self.buffer();
+        let Some(adj) = self.vadjustment() else { return vec![] };
+        // buffer coordinates to the adjustment's: they differ by a constant
+        let shift = self.visible_rect().y() as f64 - adj.value();
+        starts.iter().map(|&s| self.line_yrange(&buf.iter_at_offset(s as i32)).0 as f64 - shift).collect()
+    }
+}

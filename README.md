@@ -24,7 +24,8 @@ Pango-shaped text in a `GtkTextView`, tables as grids of editable cells, images 
 
 - Open files (`Ctrl+O`), folders (`Ctrl+Shift+O`), drag & drop, or `amoxtli file.md|folder`
 - Three views (`Ctrl+Alt+3/4/5`): **Source**, the Markdown with live highlighting; **Format**, a
-  word-processor view where Markdown never shows; and **Split**, both side by side and both editable
+  word-processor view where Markdown never shows; and **Split**, both side by side, both editable,
+  scrolling together block by block
 - Formatting tools in both editors (`Ctrl+B`, `Ctrl+I`, `Ctrl+1…6` for headings, `Ctrl+K` for links…);
   lists continue on Return and end on an empty item, `Tab` nests them, `# ` typed starts a heading,
   tables are edited cell by cell. Links open with `Ctrl+click` in the formatted view

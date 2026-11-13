@@ -9,6 +9,9 @@
 //! AMOXTLI_SNAPSHOT_EXPAND=1        expand top-level folders in the Files panel
 //! AMOXTLI_SNAPSHOT_MODE=split      editor mode: source, format or split
 //! AMOXTLI_SNAPSHOT_CARET=n         put the source editor's caret at character n
+//! AMOXTLI_SNAPSHOT_SCROLL=px       scroll the source there (the split view follows)
+//! AMOXTLI_SNAPSHOT_DELAY=ms        wait longer before saving (default 900)
+//! AMOXTLI_SELFTEST=1               run the self-test on the open file: it writes to it, use a copy
 
 use adw::prelude::*;
 use gtk::{glib, graphene};
@@ -38,7 +41,8 @@ pub fn setup(app: &adw::Application) {
             w.debug_actions();
         }
         let app = app.clone();
-        glib::timeout_add_local_once(Duration::from_millis(900), move || save(app, win, 0));
+        let delay = std::env::var("AMOXTLI_SNAPSHOT_DELAY").ok().and_then(|d| d.parse().ok()).unwrap_or(900);
+        glib::timeout_add_local_once(Duration::from_millis(delay), move || save(app, win, 0));
     });
 }
 

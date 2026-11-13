@@ -10,6 +10,7 @@ pub mod continuation;
 pub mod format;
 pub mod model;
 pub mod parse;
+pub mod scroll;
 pub mod serialize;
 pub mod syntax;
 

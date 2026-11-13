@@ -334,3 +334,29 @@ mod tests {
         assert!(Look::of(&a, None, Some(&b), 1.0).below < Look::of(&a, None, None, 1.0).below);
     }
 }
+
+impl RichView {
+    /// Which lines start a top-level block, for the split view's scroll sync.
+    pub fn block_start_lines(&self) -> Vec<i32> {
+        let buf = self.buf();
+        let lines: Vec<(Kind, bool)> = (0..buf.line_count())
+            .map(|l| {
+                let (s, e) = self.line_bounds(l);
+                (self.kind_at_line(l), s == e)
+            })
+            .collect();
+        crate::markdown::scroll::formatted_block_starts(&lines).into_iter().map(|l| l as i32).collect()
+    }
+
+    /// Where lines start, as the scroll offset that puts each at the top of the view, the
+    /// spacing above it included.
+    pub fn offsets_of(&self, lines: &[i32]) -> Vec<f64> {
+        let buf = self.buf();
+        let Some(adj) = self.vadjustment() else { return vec![] };
+        let shift = self.visible_rect().y() as f64 - adj.value();
+        lines
+            .iter()
+            .map(|&l| self.line_yrange(&buf.iter_at_line(l).unwrap_or_else(|| buf.end_iter())).0 as f64 - shift)
+            .collect()
+    }
+}

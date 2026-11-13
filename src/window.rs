@@ -3,6 +3,7 @@
 use crate::config::{self, State, APP_ID, MIME_TYPES};
 use crate::document::Heading;
 use crate::editor::rich::RichView;
+use crate::editor::split_scroll::{Side, SplitScroll};
 use crate::editor::source_view::SourceView;
 use crate::editor::{self, EditorMode, Insert, Toggle, STYLE_ACTION};
 use crate::markdown::format::FormatCommand;
@@ -87,6 +88,7 @@ pub struct Window {
     outline_source: RefCell<Option<glib::SourceId>>,
     /// Which editor the tools act on in the split view: the last one with focus.
     last_editor: Cell<EditorMode>,
+    split_scroll: Rc<SplitScroll>,
     /// Where each heading of the Contents panel starts in the source, in characters.
     heading_offsets: RefCell<Vec<i32>>,
     conflict_open: Cell<bool>,
@@ -300,6 +302,7 @@ impl Window {
         bp.add_setter(&typography_button, "visible", Some(&false.to_value())); // in the main menu too
         window.add_breakpoint(bp);
 
+        let split_scroll = SplitScroll::new(&source, &doc, &source_scroller, &scroller);
         let this = Rc::new(Self {
             window,
             split,
@@ -345,6 +348,7 @@ impl Window {
             rich_sync: RefCell::new(None),
             outline_source: RefCell::new(None),
             last_editor: Cell::new(EditorMode::Source),
+            split_scroll,
             heading_offsets: RefCell::new(vec![]),
             conflict_open: Cell::new(false),
         });
@@ -429,24 +433,16 @@ impl Window {
         self.doc.connect_has_focus_notify({
             let weak = weak.clone();
             move |doc| {
-                let Some(w) = weak.upgrade() else { return };
-                if doc.has_focus() {
-                    w.last_editor.set(EditorMode::Format);
-                    if w.render_source.borrow().is_some() {
-                        w.rerender();
-                    }
-                    w.update_format_state();
+                if let (Some(w), true) = (weak.upgrade(), doc.has_focus()) {
+                    w.catch_up(Side::Formatted);
                 }
             }
         });
         self.source.connect_has_focus_notify({
             let weak = weak.clone();
             move |source| {
-                let Some(w) = weak.upgrade() else { return };
-                if source.has_focus() {
-                    w.last_editor.set(EditorMode::Source);
-                    w.flush_rich_sync();
-                    w.update_format_state();
+                if let (Some(w), true) = (weak.upgrade(), source.has_focus()) {
+                    w.catch_up(Side::Source);
                 }
             }
         });
@@ -827,6 +823,7 @@ impl Window {
         self.matches.borrow_mut().clear();
         self.refresh_outline(text);
         self.status_bar.set_visible(true);
+        self.split_scroll.content_changed();
     }
 
     /// The Contents panel and the word count, from the text as it is now.
@@ -916,6 +913,7 @@ impl Window {
         }
         self.source_scroller.set_visible(mode.shows_source());
         self.scroller.set_visible(mode.shows_format());
+        self.split_scroll.set_enabled(mode == EditorMode::Split);
         if mode == EditorMode::Split {
             let paned = self.paned.clone();
             glib::idle_add_local_once(move || paned.set_position(paned.width() / 2));
@@ -1039,6 +1037,7 @@ impl Window {
             return;
         }
         self.mark_edited();
+        self.split_scroll.content_changed();
         // the formatted view follows 200 ms after the last edit; the Contents and the word count, 250 ms
         if let Some(id) = self.render_source.take() {
             id.remove();
@@ -1051,6 +1050,24 @@ impl Window {
                 w.rerender();
             }
         })));
+    }
+
+    /// Before an editor takes edits, it catches up with what the other one has waiting:
+    /// otherwise typing on one side and going to the other lost the last edit.
+    fn catch_up(self: &Rc<Self>, side: Side) {
+        match side {
+            Side::Formatted => {
+                self.last_editor.set(EditorMode::Format);
+                if self.render_source.borrow().is_some() {
+                    self.rerender();
+                }
+            }
+            Side::Source => {
+                self.last_editor.set(EditorMode::Source);
+                self.flush_rich_sync();
+            }
+        }
+        self.update_format_state();
     }
 
     /// Something changed: the title shows it, and it is saved a second after the last edit.
@@ -1077,6 +1094,7 @@ impl Window {
             return;
         }
         self.mark_edited();
+        self.split_scroll.content_changed();
         if let Some(id) = self.rich_sync.take() {
             id.remove();
         }
@@ -1117,8 +1135,9 @@ impl Window {
     }
 
     /// The text size changed: the formatted editor's spacing follows it.
-    pub fn typography_changed(&self) {
+    pub fn typography_changed(self: &Rc<Self>) {
         self.doc.restyle_all();
+        self.split_scroll.content_changed();
     }
 
     /// Renders the source editor's text again, keeping the formatted view's scroll position.
@@ -1141,6 +1160,7 @@ impl Window {
     fn restyle(self: &Rc<Self>) {
         self.source.restyle();
         self.doc.restyle_all();
+        self.split_scroll.content_changed();
     }
 
     /// Writes pending edits now. `false` when they couldn't be written.
@@ -1587,6 +1607,14 @@ impl Window {
         if let Some(n) = std::env::var("AMOXTLI_SNAPSHOT_CARET").ok().and_then(|n| n.parse::<i32>().ok()) {
             self.source.place_cursor_at(n);
         }
+        if let Some(y) = std::env::var("AMOXTLI_SNAPSHOT_SCROLL").ok().and_then(|y| y.parse::<f64>().ok()) {
+            // once laid out, scroll the source and let the split view follow
+            let this = self.clone();
+            glib::timeout_add_local_once(Duration::from_millis(800), move || {
+                this.source_scroller.vadjustment().set_value(y);
+                this.split_scroll.follow(Side::Source);
+            });
+        }
         if std::env::var("AMOXTLI_SELFTEST").is_ok() {
             self.self_test();
         }
@@ -1629,6 +1657,7 @@ impl Window {
             println!("{} {name}{}", if ok { "PASS" } else { "FAIL" }, if ok { String::new() } else { format!(": {detail}") });
             failures += usize::from(!ok);
         };
+
         self.set_mode(EditorMode::Source);
         let src = self.source.clone();
         let buf = src.buffer();
@@ -1722,6 +1751,20 @@ impl Window {
         self.source.buffer().insert_interactive_at_cursor("x", true);
         self.rerender();
         check("split: a source edit reaches the formatted editor", self.doc.markdown().contains('x'), self.doc.markdown());
+
+        // switching sides never loses the last edit
+        self.source.set_text("one\n");
+        self.rerender();
+        self.source.buffer().place_cursor(&self.source.buffer().end_iter());
+        self.source.buffer().insert_interactive_at_cursor("\ntwo\n", true);
+        self.catch_up(Side::Formatted);
+        let rb = self.doc.buffer();
+        rb.place_cursor(&rb.end_iter());
+        self.doc.press_return();
+        rb.insert_interactive_at_cursor("three", true);
+        self.catch_up(Side::Source);
+        check("split: both sides keep the other's last edit", self.source.text() == "one\n\ntwo\n\nthree\n", format!("{:?}", self.source.text()));
+
         self.set_mode(EditorMode::Source);
 
         // saving: written atomically, and never over a file changed elsewhere
@@ -1737,6 +1780,49 @@ impl Window {
         check("a changed file isn't written over", !self.save_now() && read() == "changed elsewhere" && self.conflict_open.get(), read());
         self.dirty.set(false);
         println!("self-test: {failures} failed");
+        self.scroll_self_test();
+    }
+
+    /// Scrolling one side of the split view brings the other to the same block. Run once both
+    /// sides are laid out: set `AMOXTLI_SNAPSHOT_DELAY` to wait for it.
+    #[cfg(debug_assertions)]
+    fn scroll_self_test(self: &Rc<Self>) {
+        // the save checks changed the file: its reload mustn't replace the text measured here
+        if let Some(m) = self.monitor.take() {
+            m.cancel();
+        }
+        if let Some(id) = self.reload_source.take() {
+            id.remove();
+        }
+        self.disk.replace(None);
+        self.set_mode(EditorMode::Split);
+        let long: String = (0..30).map(|i| format!("## Part {i}\n\nSome text, **bold** too.\n\n- a\n- b\n\n```\ncode {i}\nmore\n```\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n")).collect();
+        self.source.set_text(&long);
+        self.disk.replace(Some(long.into_bytes()));
+        self.rerender();
+        let this = self.clone();
+        glib::timeout_add_local_once(Duration::from_millis(1500), move || {
+            let report = |name: &str, ok: bool, detail: String| println!("{} {name}{}", if ok { "PASS" } else { "FAIL" }, if ok { String::new() } else { format!(": {detail}") });
+            let map = this.split_scroll.current_map();
+            report("split: the blocks of both sides pair up", map.points.len() > 100, format!("{} points", map.points.len()));
+            let p = map.points[map.points.len() / 2];
+            this.source_scroller.vadjustment().set_value(p.source);
+            this.split_scroll.follow(Side::Source);
+            let rich = this.scroller.vadjustment().value();
+            this.scroller.vadjustment().set_value(map.points[map.points.len() / 3].formatted);
+            this.split_scroll.follow(Side::Formatted);
+            let source = this.source_scroller.vadjustment().value();
+            let q = map.points[map.points.len() / 3];
+            report("split: scrolling either side lines the other up", p.source > 0.0 && (rich - p.formatted).abs() < 1.0 && (source - q.source).abs() < 1.0,
+                format!("{rich} vs {}, {source} vs {}", p.formatted, q.source));
+            // halfway between two blocks on one side is halfway on the other
+            let (a, b) = (map.points[10], map.points[11]);
+            this.source_scroller.vadjustment().set_value((a.source + b.source) / 2.0);
+            this.split_scroll.follow(Side::Source);
+            let mid = this.scroller.vadjustment().value();
+            report("split: between blocks, positions are interpolated", (mid - (a.formatted + b.formatted) / 2.0).abs() < 1.0, format!("{mid}"));
+            println!("scroll-test: done");
+        });
     }
 
     /// The formatted editor, driven as typing would drive it.
