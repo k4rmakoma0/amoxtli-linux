@@ -128,6 +128,8 @@ mod imp {
         /// The chips drawn last, with the first line of their code block, for clicks.
         pub chips: RefCell<Vec<(gtk::graphene::Rect, i32)>>,
         pub over_chip: Cell<bool>,
+        pub copy_buttons: RefCell<Vec<(gtk::graphene::Rect, i32)>>,
+        pub copied_block: Cell<Option<(i32, Instant)>>,
         pub language_action: RefCell<Option<gio::SimpleAction>>,
         /// What the context menu was last built for.
         pub menu_key: RefCell<String>,

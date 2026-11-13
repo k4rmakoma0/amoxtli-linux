@@ -619,3 +619,11 @@ msgstr ""
 #: src/window.rs:2374
 msgid "Set as Default Markdown App"
 msgstr ""
+
+#: src/editor/rich/language.rs
+msgid "Copy Code"
+msgstr ""
+
+#: src/editor/rich/language.rs
+msgid "Copied"
+msgstr ""

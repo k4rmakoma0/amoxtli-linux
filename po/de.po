@@ -620,3 +620,11 @@ msgstr "Info zu Amoxtli"
 #: src/window.rs:2374
 msgid "Set as Default Markdown App"
 msgstr "Als Standard-App für Markdown festlegen"
+
+#: src/editor/rich/language.rs
+msgid "Copy Code"
+msgstr "Code kopieren"
+
+#: src/editor/rich/language.rs
+msgid "Copied"
+msgstr "Kopiert"

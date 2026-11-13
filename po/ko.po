@@ -617,3 +617,11 @@ msgstr "Amoxtli 정보"
 #: src/window.rs:2374
 msgid "Set as Default Markdown App"
 msgstr "기본 Markdown 앱으로 설정"
+
+#: src/editor/rich/language.rs
+msgid "Copy Code"
+msgstr "코드 복사"
+
+#: src/editor/rich/language.rs
+msgid "Copied"
+msgstr "복사됨"

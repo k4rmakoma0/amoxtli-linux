@@ -13,6 +13,7 @@
 //! AMOXTLI_SNAPSHOT_SCROLL=px       scroll the source there (the split view follows)
 //! AMOXTLI_SNAPSHOT_DELAY=ms        wait longer before saving (default 900)
 //! AMOXTLI_SELFTEST=1               run the self-test on the open file: it writes to it, use a copy
+//! AMOXTLI_SANDBOX_SAVE_TARGET=path test a read-only input and a writable destination (scratch files only)
 
 use adw::prelude::*;
 use gtk::{glib, graphene};

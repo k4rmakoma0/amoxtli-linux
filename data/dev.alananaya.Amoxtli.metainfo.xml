@@ -59,15 +59,15 @@
 
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/v2.0.0/data/screenshots/light.png</image>
+      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/224a8c70a96c372dff059bd5aa8bdb0ca145c013/data/screenshots/light.png</image>
       <caption>The formatted editor, with its formatting tools</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/v2.0.0/data/screenshots/dark.png</image>
+      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/224a8c70a96c372dff059bd5aa8bdb0ca145c013/data/screenshots/dark.png</image>
       <caption>Source and formatted view side by side</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/v2.0.0/data/screenshots/folder.png</image>
+      <image>https://raw.githubusercontent.com/k4rmakoma0/amoxtli-linux/224a8c70a96c372dff059bd5aa8bdb0ca145c013/data/screenshots/folder.png</image>
       <caption>The Markdown source, in a folder of notes</caption>
     </screenshot>
   </screenshots>
@@ -80,9 +80,10 @@
           <li>Three views: the Markdown source with highlighting, a formatted view where the syntax never shows, and both side by side, scrolling together</li>
           <li>Formatting tools in a toolbar, the right-click menu and keyboard shortcuts, each one a toggle and one undo step</li>
           <li>Lists and quotes that continue on Return, headings started by typing #, tables edited cell by cell</li>
-          <li>Code blocks colored by language, chosen from a chip on each block</li>
+          <li>Code blocks colored by language, chosen from a chip on each block, with a button to copy the code</li>
           <li>Your choice of font and text size for both views</li>
           <li>Edits are saved as you go, never over a file changed elsewhere, and a moved file is followed</li>
+          <li>Files opened through the Flatpak folder browser can be saved by granting access in the system Save dialog</li>
           <li>Documents over 1 MB are edited in the source</li>
           <li>Now also in Chinese (Traditional)</li>
         </ul>

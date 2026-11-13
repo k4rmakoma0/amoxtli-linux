@@ -623,3 +623,11 @@ msgstr "О программе Amoxtli"
 #: src/window.rs:2374
 msgid "Set as Default Markdown App"
 msgstr "Сделать приложением по умолчанию для Markdown"
+
+#: src/editor/rich/language.rs
+msgid "Copy Code"
+msgstr "Копировать код"
+
+#: src/editor/rich/language.rs
+msgid "Copied"
+msgstr "Скопировано"

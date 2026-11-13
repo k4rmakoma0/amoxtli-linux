@@ -16,6 +16,20 @@ When `Cargo.lock` changes, regenerate the offline crate sources:
 python3 tools/flatpak-cargo-sources.py
 ```
 
+The home mount is deliberately read-only. Files selected through the document
+portal can be writable; files reached through the built-in folder browser may
+not be. On the first permission-denied or read-only save, Amoxtli opens the
+system Save dialog so the user can authorize that file or choose a copy. It
+retains the returned writable URI for subsequent saves. Cancellation keeps the
+edits in memory; automatic saves do not reopen the dialog until an explicit Save
+action retries it. Closing after cancellation still offers to discard changes.
+
+When testing, cover opening a file from Files, the file chooser, a selected
+folder, the built-in folder browser, and a relative Markdown link. Check saving,
+canceling the permission dialog, retrying with Ctrl+S, closing with unsaved edits,
+and external changes while the permission dialog is open. The debug self-test
+also checks the save-dialog completion paths without driving the native chooser.
+
 ## Lint (what Flathub checks)
 
 Flathub builds with the `flatpak-builder` bundled in `org.flatpak.Builder`, mirrors the

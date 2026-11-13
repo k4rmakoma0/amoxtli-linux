@@ -30,6 +30,8 @@ impl RichView {
     pub fn show(&self, doc: &Document, base_dir: Option<gio::File>) {
         let imp = self.imp();
         imp.loading.set(true);
+        imp.copied_block.set(None);
+        imp.copy_buttons.borrow_mut().clear();
         imp.base_dir.replace(base_dir);
         imp.front_matter.replace(doc.front_matter.clone());
         imp.tables.borrow_mut().clear();
@@ -89,6 +91,13 @@ impl RichView {
             }
             self.color_code_blocks(0, buf.line_count() - 1);
         });
+        // An empty final paragraph has no characters to carry its kind tags. Keep its
+        // code-block identity too, so its controls still work when the block is empty.
+        if self.is_empty_last_line(self.buf().line_count() - 1)
+            && lines.last().is_some_and(|(_, _, kind)| matches!(kind.block, Block::Code { .. }))
+        {
+            imp.typing_kind.replace(lines.last().map(|(_, _, kind)| kind.clone()));
+        }
         imp.loading.set(false);
         let buf = self.buf();
         buf.place_cursor(&buf.start_iter());

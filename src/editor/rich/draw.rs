@@ -207,6 +207,7 @@ impl RichView {
         let count = buf.line_count();
 
         self.imp().chips.borrow_mut().clear();
+        self.imp().copy_buttons.borrow_mut().clear();
         let (start, _) = self.line_at_y(visible.y());
         let mut line = start.line();
         let mut previous = (line > 0).then(|| self.line_kind_for_drawing(line - 1)).flatten();

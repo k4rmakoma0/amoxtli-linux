@@ -98,6 +98,8 @@ pub struct Window {
     /// Where each heading of the Contents panel starts in the source, in characters.
     heading_offsets: RefCell<Vec<i32>>,
     conflict_open: Cell<bool>,
+    save_dialog_open: Cell<bool>,
+    save_access_requested: Cell<bool>,
 }
 
 impl Window {
@@ -368,6 +370,8 @@ impl Window {
             too_large_page,
             heading_offsets: RefCell::new(vec![]),
             conflict_open: Cell::new(false),
+            save_dialog_open: Cell::new(false),
+            save_access_requested: Cell::new(false),
         });
         WINDOWS.with(|w| w.borrow_mut().push(this.clone()));
         this.connect_signals(&prev_b, &next_b);
@@ -606,6 +610,7 @@ impl Window {
             }
         });
         add("save", |w| {
+            w.save_access_requested.set(false);
             w.flush_save();
         });
         add(Insert::Table.action(), |w| w.insert_table());
@@ -721,6 +726,9 @@ impl Window {
     }
 
     pub fn open_folder(self: &Rc<Self>, folder: &gio::File) {
+        if !self.flush_save() {
+            return;
+        }
         self.folder.replace(Some(folder.clone()));
         self.files.set_root(folder);
         self.show_side("files");
@@ -769,6 +777,7 @@ impl Window {
             return;
         };
         self.current.replace(Some(f.clone()));
+        self.save_access_requested.set(false);
         let parent = f.parent();
         self.source.set_text(&text);
         self.disk.replace(Some(bytes));
@@ -1270,6 +1279,10 @@ impl Window {
     }
 
     fn save_now(self: &Rc<Self>) -> bool {
+        // Navigation and closing must wait for the portal, including cancellation.
+        if self.save_dialog_open.get() {
+            return false;
+        }
         if let Some(id) = self.save_source.take() {
             id.remove();
         }
@@ -1304,6 +1317,11 @@ impl Window {
                 true
             }
             Err(e) => {
+                if !self.save_access_requested.get()
+                    && (e.matches(gio::IOErrorEnum::PermissionDenied) || e.matches(gio::IOErrorEnum::ReadOnly)) {
+                    self.authorize_save(&file);
+                    return false;
+                }
                 eprintln!("amoxtli: saving {}: {}", display_path(&file), e.message());
                 self.toast(
                     &fill(
@@ -1317,9 +1335,71 @@ impl Window {
         }
     }
 
+    /// A file reached through the read-only home mount has no document-portal
+    /// write grant. SaveFile lets the user grant access to this file (or choose
+    /// a copy) without giving the application write access to their whole home.
+    fn authorize_save(self: &Rc<Self>, original: &gio::File) {
+        if self.save_dialog_open.replace(true) {
+            return;
+        }
+        // After cancellation, auto-save must not reopen the dialog on every
+        // keystroke or prevent the user from discarding edits when closing.
+        // An explicit Save action allows another attempt.
+        self.save_access_requested.set(true);
+        let dialog = gtk::FileDialog::builder()
+            .title(tr("Save"))
+            .modal(true)
+            .initial_name(basename(original))
+            .build();
+        if let Some(parent) = original.parent() {
+            dialog.set_initial_folder(Some(&parent));
+        }
+        let original = original.clone();
+        let this = self.clone();
+        glib::spawn_future_local(async move {
+            let selected = dialog.save_future(Some(&this.window)).await;
+            this.complete_authorized_save(&original, selected.ok().as_ref());
+        });
+    }
+
+    fn complete_authorized_save(self: &Rc<Self>, original: &gio::File, target: Option<&gio::File>) {
+        self.save_dialog_open.set(false);
+        let Some(target) = target else { return }; // Keep the buffer dirty on cancellation.
+        self.flush_rich_sync();
+        // The original may have changed while the chooser was open. Preserve
+        // the same conflict protection as an ordinary automatic save.
+        let on_disk = match original.load_contents(gio::Cancellable::NONE) {
+            Ok((bytes, _)) => bytes.to_vec(),
+            Err(e) => {
+                self.toast(&e.message(), 5);
+                return;
+            }
+        };
+        if self.disk.borrow().as_deref() != Some(on_disk.as_slice()) {
+            self.resolve_conflict(on_disk);
+            return;
+        }
+        let text = self.source.text();
+        match target.replace_contents(text.as_bytes(), None, false, gio::FileCreateFlags::NONE, gio::Cancellable::NONE) {
+            Ok(_) => {
+                self.disk.replace(Some(text.into_bytes()));
+                self.dirty.set(false);
+                // Keep using the writable portal URI for subsequent saves,
+                // rather than reverting to the original read-only host path.
+                self.open_file(&target, false, None, true, 0.0);
+            }
+            Err(e) => self.toast(&e.message(), 5),
+        }
+    }
+
     /// Takes in a change made to the file elsewhere: shown right away without edits of
     /// our own, otherwise the person chooses which version to keep.
     fn check_disk(self: &Rc<Self>) {
+        // Resolve changes after the chooser returns, rather than stacking a
+        // conflict dialog on top of the system's modal file chooser.
+        if self.save_dialog_open.get() {
+            return;
+        }
         let Some(file) = self.current.borrow().clone() else { return };
         let Some(disk) = self.disk.borrow().clone() else {
             // the file couldn't be shown: try again, it may have been fixed
@@ -1462,7 +1542,7 @@ impl Window {
         if !self.dirty.get() || self.save_now() {
             return true;
         }
-        if self.conflict_open.get() {
+        if self.conflict_open.get() || self.save_dialog_open.get() {
             return false;
         }
         let name = self.current.borrow().as_ref().map(basename).unwrap_or_default();
@@ -1765,6 +1845,10 @@ impl Window {
 
     #[cfg(debug_assertions)]
     pub fn debug_actions(self: &Rc<Self>) {
+        if let Ok(target) = std::env::var("AMOXTLI_SANDBOX_SAVE_TARGET") {
+            self.sandbox_save_test(&gio::File::for_path(target));
+            return;
+        }
         if let Some(n) = std::env::var("AMOXTLI_SNAPSHOT_HEADING").ok().and_then(|n| n.parse::<usize>().ok()) {
             if let Some(h) = self.headings().get(n) {
                 self.scroll_to_heading(h);
@@ -1816,8 +1900,44 @@ impl Window {
         }
     }
 
-    /// Drives the editor the way typing would, and checks the file on disk. It writes to the
-    /// open file: run it on a scratch copy.
+    /// Exercises save errors on a read-only mount and completion with a writable
+    /// destination, including a document-portal URI. Use scratch files only.
+    #[cfg(debug_assertions)]
+    fn sandbox_save_test(self: &Rc<Self>, target: &gio::File) {
+        let original = self.current.borrow().clone().expect("open a scratch file on the read-only home mount");
+        let read = |f: &gio::File| f.load_contents(gio::Cancellable::NONE).unwrap().0.to_vec();
+        let before = read(&original);
+        let error = original.replace_contents(&before, None, false, gio::FileCreateFlags::NONE, gio::Cancellable::NONE)
+            .expect_err("the original must be on a read-only mount");
+        assert!(error.matches(gio::IOErrorEnum::ReadOnly) || error.matches(gio::IOErrorEnum::PermissionDenied));
+        self.set_mode(EditorMode::Source);
+        let buf = self.source.buffer();
+        buf.insert_interactive(&mut buf.end_iter(), " sandbox edit", true);
+        self.save_access_requested.set(true); // Test the completion without driving the native chooser.
+        assert!(!self.save_now());
+        assert!(self.dirty.get());
+        assert_eq!(read(&original), before);
+        self.complete_authorized_save(&original, None);
+        assert!(self.dirty.get());
+        assert_eq!(read(&original), before);
+        assert!(!self.save_now());
+        assert!(!self.save_dialog_open.get(), "auto-save must not reopen a cancelled chooser");
+        self.complete_authorized_save(&original, Some(&original));
+        assert!(self.dirty.get(), "a denied destination must retain unsaved edits");
+        assert_eq!(read(&original), before);
+        self.complete_authorized_save(&original, Some(target));
+        assert!(!self.dirty.get());
+        assert_eq!(read(target), self.source.text().as_bytes());
+        assert!(self.current.borrow().as_ref().unwrap().equal(target));
+        buf.insert_interactive(&mut buf.end_iter(), " again", true);
+        assert!(self.flush_save());
+        assert_eq!(read(target), self.source.text().as_bytes());
+        assert_eq!(read(&original), before);
+        println!("sandbox save test: PASS read-only rejection, cancellation, authorized destination, subsequent save");
+    }
+
+    /// Drives the editor the way typing would, and checks the file on disk.
+    /// It writes to the open file: run it on a scratch copy.
     #[cfg(debug_assertions)]
     fn self_test(self: &Rc<Self>) {
         use crate::markdown::syntax;
@@ -1987,6 +2107,31 @@ impl Window {
         type_text(" edited");
         check("typing marks the document edited", self.dirty.get(), String::new());
         check("save writes the file", self.flush_save() && read() == "before edited" && !self.dirty.get(), read());
+
+        // Exercise the return path from SaveFile without automating the native
+        // chooser: cancellation, navigation while pending, and a writable URI.
+        type_text(" authorized");
+        self.save_dialog_open.set(true);
+        check("a pending save grant blocks closing", !self.can_close(), String::new());
+        let folder_before = self.folder.borrow().clone();
+        self.open_folder(&gio::File::for_path("/"));
+        check("a pending save grant blocks folder navigation", *self.folder.borrow() == folder_before, String::new());
+        self.complete_authorized_save(&file, None);
+        check("cancelling a save grant keeps edits and the original", self.dirty.get() && read() == "before edited", read());
+        if let Some(parent) = file.parent() {
+            let target = parent.child("selftest-authorized.md");
+            self.save_dialog_open.set(true);
+            self.complete_authorized_save(&file, Some(&target));
+            let saved = target.load_contents(gio::Cancellable::NONE).map(|(b, _)| b.to_vec()).unwrap_or_default();
+            check("an authorized save writes edits and retains the writable URI",
+                saved == b"before edited authorized" && !self.dirty.get()
+                    && self.current.borrow().as_ref().is_some_and(|f| f.equal(&target)),
+                String::from_utf8_lossy(&saved).into_owned());
+            type_text("!");
+            check("subsequent saves use the authorized URI", self.flush_save(), String::new());
+            self.open_file(&file, false, None, true, 0.0);
+            let _ = target.delete(gio::Cancellable::NONE);
+        }
         let _ = std::fs::write(file.path().unwrap(), "changed elsewhere");
         type_text("!");
         check("a changed file isn't written over", !self.save_now() && read() == "changed elsewhere" && self.conflict_open.get(), read());

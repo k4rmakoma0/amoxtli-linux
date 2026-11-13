@@ -31,7 +31,7 @@ Pango-shaped text in a `GtkTextView`, tables as grids of editable cells, images 
   tables are edited cell by cell. Links open with `Ctrl+click` in the formatted view
 - Code blocks colored by language in both editors (Swift, Python, JavaScript, TypeScript, JSON,
   HTML/XML, CSS, SQL and Shell, with a small hand-written lexer); in the formatted view, a chip on each
-  block shows its language and changes it
+  block shows its language and changes it, with a button to copy the entire block
 - Opening a file never rewrites it. Edits are saved a second after you stop typing (or `Ctrl+S`), and
   never over a file another app changed: Amoxtli asks which version to keep. A renamed file is followed;
   a deleted one is never brought back unasked

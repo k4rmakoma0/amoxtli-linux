@@ -1,6 +1,6 @@
 //! The language of a code block. The fence that holds it isn't shown in the formatted editor,
 //! so each block starts with a strip holding a chip with its language, which opens the menu
-//! to choose it, as does right-click › Language.
+//! to choose it, as does right-click › Language. A neighboring button copies the block.
 
 use super::draw::{same_code, CODE_PAD};
 use super::{RichView, PAGE_PAD};
@@ -43,6 +43,13 @@ impl RichView {
         let unknown = gio::SimpleAction::new_stateful("unknown", None, &true.to_variant());
         unknown.set_enabled(false);
         group.add_action(&unknown);
+        let copy = gio::SimpleAction::new("copy", None);
+        copy.connect_activate(glib::clone!(
+            #[weak(rename_to = view)]
+            self,
+            move |_, _| view.copy_code_block(view.caret_line())
+        ));
+        group.add_action(&copy);
         self.insert_action_group("language", Some(&group));
         self.update_context_menu();
 
@@ -52,7 +59,7 @@ impl RichView {
             #[weak(rename_to = view)]
             self,
             move |_, x, y| {
-                let over = view.chip_at(x, y).is_some();
+                let over = view.chip_at(x, y).is_some() || view.copy_button_at(x, y).is_some();
                 if over != view.imp().over_chip.replace(over) {
                     view.set_cursor_from_name(Some(if over { "pointer" } else { "text" }));
                 }
@@ -65,7 +72,10 @@ impl RichView {
             #[weak(rename_to = view)]
             self,
             move |gesture, _, x, y| {
-                if let Some((line, rect)) = view.chip_at(x, y) {
+                if let Some(line) = view.copy_button_at(x, y) {
+                    gesture.set_state(gtk::EventSequenceState::Claimed);
+                    view.copy_code_block(line);
+                } else if let Some((line, rect)) = view.chip_at(x, y) {
                     gesture.set_state(gtk::EventSequenceState::Claimed);
                     view.show_language_menu(line, &rect);
                 }
@@ -132,7 +142,7 @@ impl RichView {
         let h = chip_height(scale);
         let w = logical.width() + 16;
         let top = line_y + above - CODE_PAD - strip_height(scale) + 6;
-        let right = self.width() - PAGE_PAD - 6;
+        let right = self.width() - PAGE_PAD - 6 - self.copy_button_width() - 6;
         graphene::Rect::new((right - w) as f32, top as f32, w as f32, h as f32)
     }
 
@@ -164,6 +174,66 @@ impl RichView {
         snapshot.append_layout(&layout, &gdk::RGBA::new(fg.red(), fg.green(), fg.blue(), 0.75));
         snapshot.restore();
         self.imp().chips.borrow_mut().push((*rect, line));
+        self.draw_copy_button(snapshot, line, rect);
+    }
+
+    fn copy_layout(&self, copied: bool) -> pango::Layout {
+        let layout = self.create_pango_layout(Some(&if copied { tr("Copied") } else { tr("Copy Code") }));
+        let attrs = pango::AttrList::new();
+        attrs.insert(pango::AttrFloat::new_scale(0.8));
+        layout.set_attributes(Some(&attrs));
+        layout
+    }
+
+    fn copy_button_width(&self) -> i32 {
+        [false, true].into_iter().map(|copied| self.copy_layout(copied).pixel_size().0).max().unwrap_or(0) + 16
+    }
+
+    fn draw_copy_button(&self, snapshot: &gtk::Snapshot, line: i32, chip: &graphene::Rect) {
+        let rect = graphene::Rect::new(chip.x() + chip.width() + 6.0, chip.y(), self.copy_button_width() as f32, chip.height());
+        let fg = self.color();
+        snapshot.push_rounded_clip(&gsk::RoundedRect::from_rect(rect, 6.0));
+        snapshot.append_color(&gdk::RGBA::new(fg.red(), fg.green(), fg.blue(), 0.1), &rect);
+        snapshot.pop();
+        let copied = self.imp().copied_block.get().is_some_and(|(l, _)| l == line);
+        let layout = self.copy_layout(copied);
+        let (w, h) = layout.pixel_size();
+        snapshot.save();
+        snapshot.translate(&graphene::Point::new(rect.x() + (rect.width() - w as f32) / 2.0, rect.y() + (rect.height() - h as f32) / 2.0));
+        snapshot.append_layout(&layout, &fg);
+        snapshot.restore();
+        self.imp().copy_buttons.borrow_mut().push((rect, line));
+    }
+
+    fn copy_button_at(&self, x: f64, y: f64) -> Option<i32> {
+        let (bx, by) = self.window_to_buffer_coords(gtk::TextWindowType::Widget, x as i32, y as i32);
+        let point = graphene::Point::new(bx as f32, by as f32);
+        self.imp().copy_buttons.borrow().iter().find(|(r, _)| r.contains_point(&point)).map(|(_, line)| *line)
+    }
+
+    /// Copies only the code, preserving indentation and internal blank lines, without moving
+    /// the caret or changing the selection. The context menu offers the same keyboard action.
+    pub fn copy_code_block(&self, line: i32) {
+        if !matches!(self.kind_at_line(line).block, Block::Code { .. }) {
+            return;
+        }
+        let (first, last) = self.code_block_lines(line);
+        let start = self.line_bounds(first).0;
+        let end = self.line_bounds(last).1;
+        self.clipboard().set_text(&self.buf().text(&start, &end, true));
+        let copied = (first, std::time::Instant::now());
+        self.imp().copied_block.set(Some(copied));
+        self.queue_draw();
+        glib::timeout_add_local_once(std::time::Duration::from_millis(1500), glib::clone!(
+            #[weak(rename_to = view)]
+            self,
+            move || {
+                if view.imp().copied_block.get() == Some(copied) {
+                    view.imp().copied_block.set(None);
+                    view.queue_draw();
+                }
+            }
+        ));
     }
 
     /// The code block whose chip is at a point in the view: its first line, and the chip.
@@ -234,6 +304,7 @@ impl RichView {
         }
         let menu = crate::editor::context_menu();
         if info.is_some() {
+            menu.append(Some(&tr("Copy Code")), Some("language.copy"));
             menu.append_submenu(Some(&tr("Language")), &self.language_menu());
         }
         self.set_extra_menu(Some(&menu));
@@ -243,6 +314,36 @@ impl RichView {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[ignore = "requires a GTK display (run with --ignored under Broadway or Wayland)"]
+    fn copy_whole_block_without_changing_document_or_selection() {
+        gtk::init().expect("GTK display required for clipboard test");
+        let view = RichView::new();
+        let context = glib::MainContext::default();
+        for (markdown, line, expected) in [
+            ("Before\n\n```python\n  print(\"ñ😀\")\n\n  pass\n```\n\n```python\nother\n```\n", 3, "  print(\"ñ😀\")\n\n  pass"),
+            ("```\nplain\n```\n", 0, "plain"),
+            ("```\n```\n", 0, ""),
+            ("> ```sh\n> echo hola\n> ```\n", 0, "echo hola"),
+        ] {
+            view.render(markdown, None);
+            let buf = view.buf();
+            buf.select_range(&buf.start_iter(), &buf.end_iter());
+            let selection = buf.selection_bounds().map(|(s, e)| (s.offset(), e.offset()));
+            let before = view.markdown();
+            view.copy_code_block(line);
+            let value = view.clipboard().content().unwrap().value(String::static_type()).unwrap();
+            assert_eq!(value.get::<String>().unwrap(), expected);
+            // GDK reports an empty transfer as having no compatible format.
+            if !expected.is_empty() {
+                let copied = context.block_on(view.clipboard().read_text_future()).unwrap();
+                assert_eq!(copied.as_deref(), Some(expected));
+            }
+            assert_eq!(view.markdown(), before);
+            assert_eq!(buf.selection_bounds().map(|(s, e)| (s.offset(), e.offset())), selection);
+        }
+    }
 
     #[test]
     fn strip_grows_with_the_text() {
