@@ -1,7 +1,8 @@
 //! The main window: header bar, split view, search, history, live reload, status bar.
 
 use crate::config::{self, State, APP_ID, MIME_TYPES};
-use crate::document::{DocumentView, Heading};
+use crate::document::Heading;
+use crate::editor::rich::RichView;
 use crate::editor::source_view::SourceView;
 use crate::editor::{self, EditorMode, Insert, Toggle, STYLE_ACTION};
 use crate::markdown::format::FormatCommand;
@@ -45,7 +46,8 @@ pub struct Window {
     search_bar: gtk::SearchBar,
     search_entry: gtk::SearchEntry,
     match_label: gtk::Label,
-    doc: DocumentView,
+    /// The formatted editor.
+    doc: RichView,
     scroller: gtk::ScrolledWindow,
     source: SourceView,
     source_scroller: gtk::ScrolledWindow,
@@ -80,6 +82,11 @@ pub struct Window {
     dirty: Cell<bool>,
     save_source: RefCell<Option<glib::SourceId>>,
     render_source: RefCell<Option<glib::SourceId>>,
+    /// Edits in the formatted editor waiting to reach the Markdown text.
+    rich_sync: RefCell<Option<glib::SourceId>>,
+    outline_source: RefCell<Option<glib::SourceId>>,
+    /// Which editor the tools act on in the split view: the last one with focus.
+    last_editor: Cell<EditorMode>,
     /// Where each heading of the Contents panel starts in the source, in characters.
     heading_offsets: RefCell<Vec<i32>>,
     conflict_open: Cell<bool>,
@@ -198,7 +205,8 @@ impl Window {
         search_bar.bind_property("search-mode-enabled", &search_button, "active").bidirectional().sync_create().build();
 
         // ---- document
-        let doc = DocumentView::new();
+        let doc = RichView::new();
+        doc.set_extra_menu(Some(&editor::context_menu()));
         let clamp = adw::ClampScrollable::builder().child(&doc).maximum_size(920).tightening_threshold(640).build();
         let scroller = gtk::ScrolledWindow::builder().child(&clamp).vexpand(true).hexpand(true).build();
         let source = SourceView::new();
@@ -334,6 +342,9 @@ impl Window {
             dirty: Cell::new(false),
             save_source: RefCell::new(None),
             render_source: RefCell::new(None),
+            rich_sync: RefCell::new(None),
+            outline_source: RefCell::new(None),
+            last_editor: Cell::new(EditorMode::Source),
             heading_offsets: RefCell::new(vec![]),
             conflict_open: Cell::new(false),
         });
@@ -391,6 +402,51 @@ impl Window {
             move || {
                 if let Some(w) = weak.upgrade() {
                     w.on_edited();
+                }
+            }
+        });
+        self.doc.connect_edited({
+            let weak = weak.clone();
+            move || {
+                if let Some(w) = weak.upgrade() {
+                    w.on_rich_edited();
+                }
+            }
+        });
+        self.doc.connect_formats_changed({
+            let weak = weak.clone();
+            move || {
+                if let Some(w) = weak.upgrade() {
+                    if w.doc.has_focus() || w.doc.focused_cell().is_some() {
+                        w.last_editor.set(EditorMode::Format);
+                    }
+                    w.update_format_state();
+                    w.queue_stats();
+                }
+            }
+        });
+        // Before taking edits, each editor catches up with the other one's.
+        self.doc.connect_has_focus_notify({
+            let weak = weak.clone();
+            move |doc| {
+                let Some(w) = weak.upgrade() else { return };
+                if doc.has_focus() {
+                    w.last_editor.set(EditorMode::Format);
+                    if w.render_source.borrow().is_some() {
+                        w.rerender();
+                    }
+                    w.update_format_state();
+                }
+            }
+        });
+        self.source.connect_has_focus_notify({
+            let weak = weak.clone();
+            move |source| {
+                let Some(w) = weak.upgrade() else { return };
+                if source.has_focus() {
+                    w.last_editor.set(EditorMode::Source);
+                    w.flush_rich_sync();
+                    w.update_format_state();
                 }
             }
         });
@@ -762,31 +818,26 @@ impl Window {
         self.window.set_title(Some(&format!("{shown} — Amoxtli")));
     }
 
+    /// Shows a text in the formatted editor, keeping its caret where it was.
     fn render(self: &Rc<Self>, text: &str, base: Option<gio::File>) {
+        let buf = self.doc.buffer();
+        let caret = buf.iter_at_mark(&buf.get_insert()).offset();
         self.doc.render(text, base);
+        buf.place_cursor(&buf.iter_at_offset(caret));
+        self.matches.borrow_mut().clear();
+        self.refresh_outline(text);
+        self.status_bar.set_visible(true);
+    }
+
+    /// The Contents panel and the word count, from the text as it is now.
+    fn refresh_outline(self: &Rc<Self>, text: &str) {
+        if let Some(id) = self.outline_source.take() {
+            id.remove();
+        }
         self.heading_offsets.replace(crate::document::heading_offsets(text));
         self.outline.set_headings(self.doc.headings());
-        self.matches.borrow_mut().clear();
         self.total_words.set(self.doc.count_words(None));
-        let buf = self.doc.buffer();
-        let weak = Rc::downgrade(self);
-        buf.connect_has_selection_notify({
-            let weak = weak.clone();
-            move |_| {
-                if let Some(w) = weak.upgrade() {
-                    w.queue_stats();
-                }
-            }
-        });
-        buf.connect_mark_set(move |buf, _, mark| {
-            if mark == &buf.get_insert() || mark == &buf.selection_bound() {
-                if let Some(w) = weak.upgrade() {
-                    w.queue_stats();
-                }
-            }
-        });
         self.update_stats();
-        self.status_bar.set_visible(true);
     }
 
     fn close_document(&self) {
@@ -873,8 +924,13 @@ impl Window {
             self.rerender(); // show the latest edits right away
         }
         self.update_editing();
-        if mode.shows_source() && self.disk.borrow().is_some() {
-            self.source.grab_focus();
+        if self.disk.borrow().is_some() {
+            if mode == EditorMode::Format {
+                self.flush_rich_sync();
+                self.doc.grab_focus();
+            } else {
+                self.source.grab_focus();
+            }
         }
         if self.search_bar.is_search_mode() {
             self.on_search_changed();
@@ -882,12 +938,14 @@ impl Window {
         self.update_stats();
     }
 
-    /// The source editor takes edits, and the tools work, only with a readable file open.
+    /// The editors take edits, and the tools work, only with a readable file open.
     fn update_editing(&self) {
         let editable = self.disk.borrow().is_some();
         self.source.set_editable(editable);
         self.source.set_cursor_visible(editable);
-        let tools = editable && self.mode.get().shows_source();
+        self.doc.set_editable(editable);
+        self.doc.set_cursor_visible(editable);
+        let tools = editable;
         self.format_row.set_visible(tools);
         for tool in Toggle::ALL {
             self.action(tool.action()).set_enabled(tools);
@@ -898,8 +956,20 @@ impl Window {
         self.action("save").set_enabled(editable);
     }
 
+    /// The editor the tools act on: the one on screen, or in the split view the last one
+    /// with focus.
+    fn tools_target(&self) -> EditorMode {
+        match self.mode.get() {
+            EditorMode::Split => self.last_editor.get(),
+            mode => mode,
+        }
+    }
+
     fn update_format_state(&self) {
-        let formats = self.source.active_formats();
+        let formats = match self.tools_target() {
+            EditorMode::Format => self.doc.active_formats(),
+            _ => self.source.active_formats(),
+        };
         for tool in Toggle::ALL {
             self.action(tool.action()).set_state(&tool.is_active(&formats).to_variant());
         }
@@ -907,8 +977,32 @@ impl Window {
     }
 
     fn apply_format(&self, command: &FormatCommand) {
-        self.source.apply_format(command);
-        self.source.grab_focus();
+        match self.tools_target() {
+            EditorMode::Format => {
+                let cell = self.doc.focused_cell();
+                self.doc.apply_format(command);
+                match cell {
+                    Some((_, c)) => {
+                        c.grab_focus();
+                    }
+                    None => {
+                        self.doc.grab_focus();
+                    }
+                }
+            }
+            _ => {
+                self.source.apply_format(command);
+                self.source.grab_focus();
+            }
+        }
+        self.update_format_state();
+    }
+
+    fn focus_editor(&self) {
+        match self.tools_target() {
+            EditorMode::Format => self.doc.grab_focus(),
+            _ => self.source.grab_focus(),
+        };
     }
 
     fn run_tool(self: &Rc<Self>, tool: Toggle) {
@@ -918,11 +1012,14 @@ impl Window {
         }
         let this = self.clone();
         glib::spawn_future_local(async move {
-            let selected = this.source.selected_text();
+            let selected = match this.tools_target() {
+                EditorMode::Format => this.doc.selected_text(),
+                _ => this.source.selected_text(),
+            };
             if let Some((text, destination)) = editor::dialogs::ask_link(&this.window, &selected).await {
                 this.apply_format(&FormatCommand::Link { text, destination });
             } else {
-                this.source.grab_focus();
+                this.focus_editor();
             }
         });
     }
@@ -932,9 +1029,7 @@ impl Window {
         glib::spawn_future_local(async move {
             match editor::dialogs::ask_table(&this.window).await {
                 Some(dimensions) => this.apply_format(&FormatCommand::Table(dimensions)),
-                None => {
-                    this.source.grab_focus();
-                }
+                None => this.focus_editor(),
             }
         });
     }
@@ -943,20 +1038,7 @@ impl Window {
         if self.disk.borrow().is_none() {
             return;
         }
-        if !self.dirty.replace(true) {
-            self.update_title();
-        }
-        // autosave a second after the last edit
-        if let Some(id) = self.save_source.take() {
-            id.remove();
-        }
-        let weak = Rc::downgrade(self);
-        self.save_source.replace(Some(glib::timeout_add_local_once(Duration::from_secs(1), move || {
-            if let Some(w) = weak.upgrade() {
-                w.save_source.replace(None);
-                w.save_now();
-            }
-        })));
+        self.mark_edited();
         // the formatted view follows 200 ms after the last edit; the Contents and the word count, 250 ms
         if let Some(id) = self.render_source.take() {
             id.remove();
@@ -969,6 +1051,74 @@ impl Window {
                 w.rerender();
             }
         })));
+    }
+
+    /// Something changed: the title shows it, and it is saved a second after the last edit.
+    fn mark_edited(self: &Rc<Self>) {
+        if !self.dirty.replace(true) {
+            self.update_title();
+        }
+        if let Some(id) = self.save_source.take() {
+            id.remove();
+        }
+        let weak = Rc::downgrade(self);
+        self.save_source.replace(Some(glib::timeout_add_local_once(Duration::from_secs(1), move || {
+            if let Some(w) = weak.upgrade() {
+                w.save_source.replace(None);
+                w.save_now();
+            }
+        })));
+    }
+
+    /// An edit in the formatted editor: the Markdown follows shortly, and with it the source
+    /// editor (only what differs), the Contents panel and the word count.
+    fn on_rich_edited(self: &Rc<Self>) {
+        if self.disk.borrow().is_none() {
+            return;
+        }
+        self.mark_edited();
+        if let Some(id) = self.rich_sync.take() {
+            id.remove();
+        }
+        let weak = Rc::downgrade(self);
+        self.rich_sync.replace(Some(glib::timeout_add_local_once(Duration::from_millis(150), move || {
+            if let Some(w) = weak.upgrade() {
+                w.rich_sync.replace(None);
+                w.sync_from_rich();
+            }
+        })));
+    }
+
+    fn flush_rich_sync(self: &Rc<Self>) {
+        if let Some(id) = self.rich_sync.take() {
+            id.remove();
+            self.sync_from_rich();
+        }
+    }
+
+    fn sync_from_rich(self: &Rc<Self>) {
+        // a source edit waiting to show in the formatted editor wins: it came later
+        if self.render_source.borrow().is_some() {
+            return;
+        }
+        let markdown = self.doc.markdown();
+        self.source.apply_external(&markdown);
+        if let Some(id) = self.outline_source.take() {
+            id.remove();
+        }
+        let weak = Rc::downgrade(self);
+        self.outline_source.replace(Some(glib::timeout_add_local_once(Duration::from_millis(250), move || {
+            if let Some(w) = weak.upgrade() {
+                w.outline_source.replace(None);
+                let text = w.source.text();
+                w.refresh_outline(&text);
+            }
+        })));
+    }
+
+    /// The text size changed: the formatted editor's spacing follows it.
+    pub fn typography_changed(&self) {
+        self.doc.restyle_all();
     }
 
     /// Renders the source editor's text again, keeping the formatted view's scroll position.
@@ -990,9 +1140,7 @@ impl Window {
 
     fn restyle(self: &Rc<Self>) {
         self.source.restyle();
-        if self.disk.borrow().is_some() {
-            self.rerender();
-        }
+        self.doc.restyle_all();
     }
 
     /// Writes pending edits now. `false` when they couldn't be written.
@@ -1004,6 +1152,7 @@ impl Window {
         if let Some(id) = self.save_source.take() {
             id.remove();
         }
+        self.flush_rich_sync();
         if !self.dirty.get() {
             return true;
         }
@@ -1557,6 +1706,24 @@ impl Window {
         app.activate_action("font", Some(&font.name().to_variant()));
         let _ = size;
 
+        self.rich_self_test(&mut check);
+
+        // an edit in the formatted editor reaches the Markdown text, and the file
+        self.set_mode(EditorMode::Split);
+        self.source.set_text("# T\n\nbody\n");
+        self.rerender();
+        let rb = self.doc.buffer();
+        rb.place_cursor(&rb.end_iter());
+        rb.insert_interactive_at_cursor("!", true);
+        self.flush_rich_sync();
+        check("split: a formatted edit reaches the source", self.source.text() == "# T\n\nbody!\n", self.source.text());
+        let shown = self.mode_groups[0].active_name().map(|n| n.to_string()).unwrap_or_default();
+        check("split: the mode selector shows it", shown == "split", shown);
+        self.source.buffer().insert_interactive_at_cursor("x", true);
+        self.rerender();
+        check("split: a source edit reaches the formatted editor", self.doc.markdown().contains('x'), self.doc.markdown());
+        self.set_mode(EditorMode::Source);
+
         // saving: written atomically, and never over a file changed elsewhere
         let Some(file) = self.current.borrow().clone() else { return };
         let read = || file.load_contents(gio::Cancellable::NONE).map(|(b, _)| String::from_utf8_lossy(&b).into_owned()).unwrap_or_default();
@@ -1570,6 +1737,163 @@ impl Window {
         check("a changed file isn't written over", !self.save_now() && read() == "changed elsewhere" && self.conflict_open.get(), read());
         self.dirty.set(false);
         println!("self-test: {failures} failed");
+    }
+
+    /// The formatted editor, driven as typing would drive it.
+    #[cfg(debug_assertions)]
+    fn rich_self_test(self: &Rc<Self>, check: &mut impl FnMut(&str, bool, String)) {
+        use crate::markdown::format::TableDimensions;
+        use gtk::gdk::{Key, ModifierType};
+        let doc = self.doc.clone();
+        let buf = doc.buffer();
+        let none = ModifierType::empty();
+        let load = |md: &str| {
+            doc.render(md, None);
+            buf.place_cursor(&buf.end_iter());
+            doc.update_typing_style();
+        };
+        let type_text = |t: &str| {
+            buf.insert_interactive_at_cursor(t, true);
+        };
+        let md = || doc.markdown();
+        let at_line_start = |line: i32| buf.place_cursor(&buf.iter_at_line(line).unwrap());
+
+        load("- one");
+        doc.press_return();
+        type_text("two");
+        check("rich: Return makes another item", md() == "- one\n- two\n", md());
+        doc.press_return();
+        doc.press_return();
+        type_text("after");
+        check("rich: Return on an empty item ends the list", md() == "- one\n- two\n\nafter\n", md());
+
+        load("# Title");
+        doc.press_return();
+        type_text("body");
+        check("rich: Return after a heading is body text", md() == "# Title\n\nbody\n", md());
+
+        load("- a\n- b");
+        at_line_start(1);
+        doc.key(Key::BackSpace, none);
+        check("rich: Delete at an item's start removes the bullet", md() == "- a\n\nb\n", md());
+        load("text\n\n## Head");
+        at_line_start(1);
+        doc.key(Key::BackSpace, none);
+        check("rich: Delete at a heading's start makes it body text", md() == "text\n\nHead\n", md());
+
+        load("- a\n- b");
+        at_line_start(1);
+        doc.key(Key::Tab, none);
+        let nested = md();
+        doc.key(Key::ISO_Left_Tab, ModifierType::SHIFT_MASK);
+        check("rich: Tab nests an item and Shift+Tab takes it out", nested == "- a\n  - b\n" && md() == "- a\n- b\n", format!("{nested:?} {:?}", md()));
+
+        load("```\nlet a");
+        doc.press_return();
+        doc.press_return();
+        type_text("b");
+        check("rich: Return in code adds lines, blank ones too", md() == "```\nlet a\n\nb\n```\n", md());
+        load("```\nx\n```");
+        doc.press_return();
+        let stays = doc.kind_at_caret().block.is_code();
+        type_text("y");
+        check("rich: the caret stays in the block after Return at the end", stays && md() == "```\nx\ny\n```\n", md());
+        load("```\nx\n```");
+        doc.key(Key::Down, none);
+        type_text("out");
+        check("rich: Down leaves a code block at the end", md() == "```\nx\n```\n\nout\n", md());
+
+        load("## Gone");
+        buf.select_range(&buf.iter_at_line(0).unwrap(), &buf.end_iter());
+        buf.delete_interactive(&mut buf.iter_at_line(0).unwrap(), &mut buf.end_iter(), true);
+        type_text("plain");
+        check("rich: a heading emptied becomes body text", md() == "plain\n", md());
+
+        load("");
+        for c in ["#", "#", " ", "T"] {
+            type_text(c);
+        }
+        type_text("itle");
+        check("rich: typing ## makes a heading", md() == "## Title\n", md());
+        load("");
+        for c in ["\\", "#", " ", "x"] {
+            type_text(c);
+        }
+        check("rich: \\# stays a literal hash", md() == "\\# x\n" && doc.kind_at_caret().block == crate::markdown::model::Block::Paragraph, md());
+        load("\\# loaded");
+        buf.place_cursor(&buf.end_iter());
+        type_text("!");
+        check("rich: a loaded hash stays literal", md() == "\\# loaded!\n", md());
+
+        load("word");
+        buf.select_range(&buf.start_iter(), &buf.end_iter());
+        doc.apply_format(&FormatCommand::Bold);
+        let bold = md();
+        let pressed = doc.active_formats().strong;
+        doc.apply_format(&FormatCommand::Bold);
+        check("rich: bold toggles on the selection and shows pressed", bold == "**word**\n" && pressed && md() == "word\n", format!("{bold:?} {pressed}"));
+        load("a");
+        type_text(" ");
+        doc.apply_format(&FormatCommand::Italic);
+        let pressed = doc.active_formats().emphasis;
+        type_text("b");
+        check("rich: italic with no selection applies to what's typed", pressed && md() == "a *b*\n", md());
+
+        for (command, expected) in [
+            (FormatCommand::Heading(2), "## x\n"),
+            (FormatCommand::Quote, "> x\n"),
+            (FormatCommand::BulletList, "- x\n"),
+            (FormatCommand::NumberedList, "1. x\n"),
+            (FormatCommand::CodeBlock, "```\nx\n```\n"),
+        ] {
+            load("x");
+            doc.apply_format(&command);
+            let on = md();
+            doc.apply_format(&command);
+            check(&format!("rich: {command:?} applies and toggles off"), on == expected && md() == "x\n", format!("{on:?} then {:?}", md()));
+        }
+        load("see");
+        buf.select_range(&buf.start_iter(), &buf.end_iter());
+        doc.apply_format(&FormatCommand::Link { text: String::new(), destination: "https://a.b".into() });
+        check("rich: link on the selection", md() == "[see](https://a.b)\n", md());
+        load("text");
+        doc.apply_format(&FormatCommand::HorizontalRule);
+        type_text("below");
+        check("rich: a rule goes below with a line to type on", md() == "text\n\n---\n\nbelow\n", md());
+        load("");
+        let dims = TableDimensions::new(2, 2, |n| format!("H{n}")).unwrap();
+        doc.apply_format(&FormatCommand::Table(dims));
+        check("rich: a table inserts its header and rows", md() == "| H1 | H2 |\n| --- | --- |\n|  |  |\n", md());
+
+        load("- a\n- b");
+        doc.press_return();
+        let markers = doc.line_markers();
+        check("rich: the empty last line shows the next bullet", markers.last().is_some_and(|m| m.len() == 1),
+            format!("{:?}", markers.last()));
+        load("1. a\n2. b");
+        doc.press_return();
+        let markers = doc.line_markers();
+        check("rich: and the next number", markers.last().and_then(|m| m.first()).is_some_and(|m| m.text == "3."),
+            format!("{:?}", markers.last()));
+
+        load("one");
+        type_text(" two");
+        doc.apply_format(&FormatCommand::Heading(1));
+        doc.undo();
+        let after_undo = md();
+        doc.undo();
+        check("rich: undo restores tags and text, step by step", after_undo == "one two\n" && md() == "one\n", format!("{after_undo:?} then {:?}", md()));
+        doc.redo();
+        check("rich: redo", md() == "one two\n", md());
+
+        let sample = "# Doc\n\nSome **bold** and [a link](u).\n\n> [!TIP]\n> Alert\n\n| A | B |\n| :--- | ---: |\n| 1 |  |\n\n- [ ] task\n\n<div>raw</div>\n";
+        load(sample);
+        check("rich: what opens comes back unchanged", md() == sample, md());
+        if let Some((_, table)) = doc.imp_tables().first().cloned() {
+            let cell = &table.cells[1][1];
+            cell.buffer().insert_interactive_at_cursor("2", true);
+            check("rich: typing in a cell", md().contains("| 1 | 2 |"), md());
+        }
     }
 
     fn show_side(&self, name: &str) {
@@ -1647,7 +1971,10 @@ impl Window {
         if let Some(m) = self.monitor.take() {
             m.cancel();
         }
-        for source in [self.render_source.take(), self.save_source.take(), self.reload_source.take()].into_iter().flatten() {
+        for source in [self.render_source.take(), self.save_source.take(), self.reload_source.take(), self.rich_sync.take(), self.outline_source.take()]
+            .into_iter()
+            .flatten()
+        {
             source.remove();
         }
         let me = self.window.clone();

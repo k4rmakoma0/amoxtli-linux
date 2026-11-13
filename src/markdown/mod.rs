@@ -8,6 +8,9 @@
 pub mod active;
 pub mod continuation;
 pub mod format;
+pub mod model;
+pub mod parse;
+pub mod serialize;
 pub mod syntax;
 
 use std::ops::Range;
@@ -79,6 +82,21 @@ pub(crate) fn content_range(text: &str, line: Range<usize>) -> Range<usize> {
     line.start..end
 }
 
+/// The smallest replacement that turns `old` into `new`: what lies between their common
+/// start and their common end, in characters. `None` when they are equal.
+pub fn difference(old: &str, new: &str) -> Option<(Range<usize>, String)> {
+    if old == new {
+        return None;
+    }
+    let prefix: usize = old.chars().zip(new.chars()).take_while(|(a, b)| a == b).count();
+    let old_rest: Vec<char> = old.chars().skip(prefix).collect();
+    let new_rest: Vec<char> = new.chars().skip(prefix).collect();
+    let suffix = old_rest.iter().rev().zip(new_rest.iter().rev()).take_while(|(a, b)| a == b).count();
+    let removed = old_rest.len() - suffix;
+    let inserted: String = new_rest[..new_rest.len() - suffix].iter().collect();
+    Some((prefix..prefix + removed, inserted))
+}
+
 #[cfg(test)]
 pub(crate) mod marks {
     //! Selections written inline in tests: `«` and `»` around selected text, `‸` for the caret.
@@ -126,6 +144,21 @@ mod tests {
         assert_eq!(char_offset(text, 5), 2);
         assert_eq!(byte_range(text, 2..3), 5..7);
         assert_eq!(byte_index(text, 99), text.len());
+    }
+
+    #[test]
+    fn minimal_difference() {
+        assert_eq!(difference("abc", "abc"), None);
+        assert_eq!(difference("hola mundo", "hola nuevo mundo"), Some((5..5, "nuevo ".into())));
+        assert_eq!(difference("hola nuevo mundo", "hola mundo"), Some((5..11, String::new())));
+        // ambiguous cases only need to give the new text back
+        let (old, new) = ("a **b** c", "a *b* c");
+        let (range, inserted) = difference(old, new).unwrap();
+        let chars: Vec<char> = old.chars().collect();
+        let applied: String = chars[..range.start].iter().chain(inserted.chars().collect::<Vec<_>>().iter()).chain(chars[range.end..].iter()).collect();
+        assert_eq!(applied, new);
+        assert_eq!(difference("🌮 a", "🌮 b"), Some((2..3, "b".into())));
+        assert_eq!(difference("ñ", "ññ"), Some((1..1, "ñ".into())));
     }
 
     #[test]

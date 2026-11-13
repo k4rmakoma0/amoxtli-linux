@@ -9,7 +9,6 @@ license = "MIT"
 gtk = { package = "gtk4", version = "0.11", features = ["gnome_49"] }
 adw = { package = "libadwaita", version = "0.9", features = ["v1_8"] }
 pulldown-cmark = { version = "0.13", default-features = false }
-syntect = { version = "5", default-features = false, features = ["default-fancy"] }
 gettext-rs = { version = "0.8", features = ["gettext-system"] }
 libc = "0.2"
 # already built for syntect; look-around in the source editor's syntax patterns

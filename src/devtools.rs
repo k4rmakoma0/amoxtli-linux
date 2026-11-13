@@ -24,7 +24,10 @@ pub fn setup(app: &adw::Application) {
     }
     let app = app.clone();
     glib::timeout_add_local_once(Duration::from_millis(1200), move || {
-        let Some(win) = app.active_window() else { return app.quit() };
+        let Some(win) = app.active_window() else {
+            eprintln!("snapshot: no window");
+            return app.quit();
+        };
         if let Ok(size) = std::env::var("AMOXTLI_SNAPSHOT_SIZE") {
             if let Some((w, h)) = size.split_once('x') {
                 win.unmaximize();
@@ -35,18 +38,28 @@ pub fn setup(app: &adw::Application) {
             w.debug_actions();
         }
         let app = app.clone();
-        glib::timeout_add_local_once(Duration::from_millis(900), move || {
-            let path = std::env::var("AMOXTLI_SNAPSHOT").unwrap();
-            let (w, h) = (win.width(), win.height());
-            let paintable = gtk::WidgetPaintable::new(Some(&win));
-            let snap = gtk::Snapshot::new();
-            paintable.snapshot(&snap, w as f64, h as f64);
-            if let (Some(node), Some(renderer)) = (snap.to_node(), win.renderer()) {
-                let tex = renderer.render_texture(node, Some(&graphene::Rect::new(0.0, 0.0, w as f32, h as f32)));
-                let _ = tex.save_to_png(&path);
-                println!("saved {path} {w}x{h}");
-            }
-            app.quit();
-        });
+        glib::timeout_add_local_once(Duration::from_millis(900), move || save(app, win, 0));
     });
+}
+
+/// Saves the window's last frame. Right after a relayout there may be none yet: try again.
+fn save(app: adw::Application, win: gtk::Window, tries: u32) {
+    let path = std::env::var("AMOXTLI_SNAPSHOT").unwrap();
+    let (w, h) = (win.width(), win.height());
+    let paintable = gtk::WidgetPaintable::new(Some(&win));
+    let snap = gtk::Snapshot::new();
+    paintable.snapshot(&snap, w as f64, h as f64);
+    match (snap.to_node(), win.renderer()) {
+        (Some(node), Some(renderer)) => {
+            let tex = renderer.render_texture(node, Some(&graphene::Rect::new(0.0, 0.0, w as f32, h as f32)));
+            let _ = tex.save_to_png(&path);
+            println!("saved {path} {w}x{h}");
+        }
+        _ if tries < 20 => {
+            glib::timeout_add_local_once(Duration::from_millis(150), move || save(app, win, tries + 1));
+            return;
+        }
+        _ => eprintln!("snapshot: nothing to save ({w}x{h})"),
+    }
+    app.quit();
 }

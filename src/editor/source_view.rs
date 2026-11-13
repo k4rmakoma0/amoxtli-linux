@@ -31,6 +31,8 @@ mod imp {
         pub pending: Cell<Option<(i32, i32)>>,
         /// Text replaced by `set_text`, which isn't an edit by the person.
         pub loading: Cell<bool>,
+        /// Text from the formatted editor: highlighted, but not an edit by the person.
+        pub quiet: Cell<bool>,
         pub preedit: Cell<bool>,
         pub formats_queued: Cell<bool>,
         pub on_edited: RefCell<Option<Callback>>,
@@ -124,6 +126,9 @@ impl SourceView {
             if let Some((start, end)) = pending {
                 view.highlight_edit(start, end);
             }
+            if view.imp().quiet.get() {
+                return;
+            }
             let cb = view.imp().on_edited.borrow().clone();
             if let Some(cb) = cb {
                 cb();
@@ -177,6 +182,25 @@ impl SourceView {
         self.highlight_all();
         buf.place_cursor(&buf.start_iter());
         self.queue_formats();
+    }
+
+    /// Shows text that changed in the formatted editor. Only what differs is replaced, so
+    /// the caret, the scroll position and the highlighting of the rest stay. The source's own
+    /// undo steps no longer match the text, so they go. Not an edit by the person.
+    pub fn apply_external(&self, text: &str) {
+        let current = self.text();
+        let Some((range, inserted)) = crate::markdown::difference(&current, text) else { return };
+        let buf = self.buffer();
+        let imp = self.imp();
+        imp.quiet.set(true);
+        buf.begin_irreversible_action();
+        let mut start = buf.iter_at_offset(range.start as i32);
+        let mut end = buf.iter_at_offset(range.end as i32);
+        buf.delete(&mut start, &mut end);
+        let mut at = buf.iter_at_offset(range.start as i32);
+        buf.insert(&mut at, &inserted);
+        buf.end_irreversible_action();
+        imp.quiet.set(false);
     }
 
     pub fn text(&self) -> String {

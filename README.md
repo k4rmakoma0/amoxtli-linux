@@ -17,24 +17,27 @@ It ships as a single ~4 MB binary.
   </tr>
 </table>
 
-There is no embedded browser. Markdown is rendered straight into native widgets:
-Pango-shaped text in a `GtkTextView`, tables as `GtkGrid`s, images as GPU textures.
+There is no embedded browser. Markdown is edited straight in native widgets:
+Pango-shaped text in a `GtkTextView`, tables as grids of editable cells, images as GPU textures.
 
 ## Features
 
 - Open files (`Ctrl+O`), folders (`Ctrl+Shift+O`), drag & drop, or `amoxtli file.md|folder`
-- Edit the Markdown source with live highlighting: **Source**, **Format** and **Split** views
-  (`Ctrl+Alt+3/4/5`), formatting tools (`Ctrl+B`, `Ctrl+I`, `Ctrl+1…6` for headings, `Ctrl+K` for links…),
-  lists and quotes that continue on Return. Edits are saved a second after you stop typing (or `Ctrl+S`),
-  and never over a file another app changed: Amoxtli asks which version to keep
+- Three views (`Ctrl+Alt+3/4/5`): **Source**, the Markdown with live highlighting; **Format**, a
+  word-processor view where Markdown never shows; and **Split**, both side by side and both editable
+- Formatting tools in both editors (`Ctrl+B`, `Ctrl+I`, `Ctrl+1…6` for headings, `Ctrl+K` for links…);
+  lists continue on Return and end on an empty item, `Tab` nests them, `# ` typed starts a heading,
+  tables are edited cell by cell. Links open with `Ctrl+click` in the formatted view
+- Opening a file never rewrites it. Edits are saved a second after you stop typing (or `Ctrl+S`), and
+  never over a file another app changed: Amoxtli asks which version to keep
 - **Contents** sidebar: the document's table of contents, follows your scroll position
 - **Files** sidebar: lazy folder tree that shows only Markdown files and directories
 - Opening a folder shows its `README.md` / `index.md` automatically
 - Live reload when the file changes on disk (keeps your scroll position)
 - Relative links between `.md` files, `#heading` anchors, back/forward history (`Alt+←/→`)
-- CommonMark + tables, task lists, strikethrough, footnotes, GitHub alerts (`> [!NOTE]`),
-  `{#custom-id}` heading anchors, smart quotes, YAML/TOML front matter (hidden)
-- Syntax-highlighted code (syntect), local and remote images (PNG/JPEG/SVG/GIF/WebP), `<img>`/`<br>` HTML
+- CommonMark + tables, task lists, strikethrough, GitHub alerts (`> [!NOTE]`), `{#custom-id}` heading
+  anchors, `<u>` underline, local and remote images (PNG/JPEG/SVG/GIF/WebP). HTML blocks, footnotes and
+  YAML/TOML front matter are kept exactly as written
 - Find in document (`Ctrl+F`, or just start typing)
 - Choose the font (System, Serif, Monospace, or Rounded when a rounded font is installed) and the text
   size (`Ctrl +/-/0`) from the **Aa** menu, for the source and the formatted view alike
@@ -130,9 +133,11 @@ To add a language, copy `po/amoxtli.pot` to `po/<lang>.po`, set the `Language` a
 src/main.rs          entry point
 src/application.rs   Adw.Application: actions, shortcuts, CSS, file opening
 src/window.rs        main window: header bar, split view, search, history, reload, status bar
-src/document.rs      Markdown (pulldown-cmark) → native GtkTextView renderer
-src/markdown/        GTK-free editing logic: syntax scanner, formatting tools, Return in lists (tested)
+src/document.rs      headings, word counts and other helpers both editors share
+src/markdown/        GTK-free logic (tested): document model, parser and canonical serializer,
+                     syntax scanner, formatting tools, Return in lists
 src/editor/          source editor, formatting toolbar and menus, link/table dialogs
+src/editor/rich/     the formatted editor: conversion, keys, tools, drawing, tables, undo
 src/widgets.rs       FitImage / FitBox helper widgets
 src/sidebar.rs       outline (index) and folder tree panels
 src/i18n.rs          gettext setup

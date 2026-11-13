@@ -2,6 +2,7 @@
 
 pub mod dialogs;
 pub mod overflow;
+pub mod rich;
 pub mod source_view;
 
 use crate::i18n::{fill, tr};

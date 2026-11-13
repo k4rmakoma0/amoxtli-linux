@@ -10,16 +10,28 @@ use gtk::{gdk, gio, glib};
 use std::cell::Cell;
 use std::rc::Rc;
 
+/// Table lines and header: black on light, white on dark, stronger with high contrast.
 const CSS: &str = r#"
 .md-document { background-color: transparent; }
-.md-rule { min-height: 1px; background: alpha(currentColor, 0.15); margin: 0; }
-.md-table-frame { border-radius: 10px; border: 1px solid alpha(currentColor, 0.14); }
-.md-table-frame > border { border: none; }
-.md-cell { padding: 7px 14px; border-bottom: 1px solid alpha(currentColor, 0.09); }
+.md-rule { min-height: 1px; background: alpha(currentColor, 0.2); margin: 0; }
+.md-table-frame { border-radius: 8px; border: 1px solid alpha(currentColor, 0.2); }
+.md-cell { border-bottom: 1px solid alpha(currentColor, 0.2); border-right: 1px solid alpha(currentColor, 0.2); }
 .md-cell.md-last-row { border-bottom: none; }
-.md-th { font-weight: bold; background: alpha(currentColor, 0.05); }
-.md-striped { background: alpha(currentColor, 0.025); }
+.md-cell.md-last-column { border-right: none; }
+.md-th { background: alpha(currentColor, 0.05); }
+.md-th > textview { font-weight: bold; }
+.md-cell-text, .md-cell-text > text { background-color: transparent; }
 .md-img-alt { font-size: 90%; }
+@media (prefers-color-scheme: dark) {
+  .md-rule { background: alpha(currentColor, 0.26); }
+  .md-table-frame, .md-cell { border-color: alpha(currentColor, 0.26); }
+  .md-th { background: alpha(currentColor, 0.08); }
+}
+@media (prefers-contrast: more) {
+  .md-rule { background: alpha(currentColor, 0.5); }
+  .md-table-frame, .md-cell { border-color: alpha(currentColor, 0.5); }
+  .md-th { background: alpha(currentColor, 0.12); }
+}
 "#;
 
 thread_local! {
@@ -51,6 +63,9 @@ fn apply_typography(font: ReadingFont, size: TextSize) {
     SIZE.with(|s| s.set(size));
     let family = font.family(&installed_families());
     TYPOGRAPHY.with(|t| t.load_from_string(&typography::css(family.as_deref(), size)));
+    for w in Window::all() {
+        w.typography_changed();
+    }
 }
 
 fn save_typography() {
