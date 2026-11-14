@@ -1,13 +1,15 @@
 name: amoxtli
 title: Amoxtli
 base: core26
-version: '2.0.0'
+version: '2.1.0'
 summary: Write and read Markdown documents and notes
 description: |
   Amoxtli is a native Markdown editor for Linux. Edit the Markdown source,
   a formatted document, or both side by side with synchronized scrolling.
-  It includes formatting tools, editable tables, code highlighting, a folder
-  browser, a table of contents, automatic saving and ten translations.
+  Create Markdown files from the welcome screen or edit existing notes.
+  It includes formatting tools, editable tables, syntax highlighting for 20
+  languages, a folder browser, a table of contents, automatic saving and ten
+  translations.
 
   Amoxtli means "book" in Nahuatl.
 grade: stable

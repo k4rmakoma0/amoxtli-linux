@@ -37,6 +37,18 @@ fn basename(f: &gio::File) -> String {
     f.basename().map(|b| b.to_string_lossy().into_owned()).unwrap_or_default()
 }
 
+/// Create without truncating existing data; an empty destination is ready to edit.
+async fn create_markdown_file(file: &gio::File) -> Result<(), glib::Error> {
+    match file.create_future(gio::FileCreateFlags::NONE, glib::Priority::DEFAULT).await {
+        Ok(stream) => stream.close_future(glib::Priority::DEFAULT).await,
+        Err(error) if error.matches(gio::IOErrorEnum::Exists) => {
+            let (contents, _) = file.load_contents_future().await?;
+            if contents.is_empty() { Ok(()) } else { Err(error) }
+        }
+        Err(error) => Err(error),
+    }
+}
+
 pub struct Window {
     pub window: adw::ApplicationWindow,
     split: adw::OverlaySplitView,
@@ -234,11 +246,13 @@ impl Window {
         let empty = adw::StatusPage::builder()
             .icon_name(APP_ID)
             .title("Amoxtli")
-            .description(format!("{}\n{}", tr("Open a Markdown file or a folder of notes."), tr("You can also drop files here.")))
+            .description(format!("{}\n{}", tr("Create a Markdown file or open a file or folder."), tr("You can also drop files here.")))
             .build();
-        let ebox = gtk::Box::builder().spacing(12).halign(gtk::Align::Center).build();
-        ebox.append(&gtk::Button::builder().label(tr("Open File…")).action_name("win.open")
+        let ebox = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(12).halign(gtk::Align::Center).build();
+        ebox.append(&gtk::Button::builder().label(tr("Create Markdown File…")).action_name("win.new-file")
             .css_classes(["pill", "suggested-action"]).build());
+        ebox.append(&gtk::Button::builder().label(tr("Open File…")).action_name("win.open")
+            .css_classes(["pill"]).build());
         ebox.append(&gtk::Button::builder().label(tr("Open Folder…")).action_name("win.open-folder")
             .css_classes(["pill"]).build());
         empty.set_child(Some(&ebox));
@@ -585,6 +599,7 @@ impl Window {
             self.actions.add_action(&action);
             action
         };
+        add("new-file", |w| w.choose_new_file());
         add("open", |w| w.choose_file());
         add("open-folder", |w| w.choose_folder());
         add("reload", |w| w.reload());
@@ -664,6 +679,61 @@ impl Window {
 
     pub fn is_empty(&self) -> bool {
         self.current.borrow().is_none() && self.folder.borrow().is_none()
+    }
+
+    fn choose_new_file(self: &Rc<Self>) {
+        if !self.flush_save() {
+            return;
+        }
+        let md = gtk::FileFilter::new();
+        md.set_name(Some(&tr("Markdown Documents")));
+        md.add_suffix("md");
+        let filters = gio::ListStore::new::<gtk::FileFilter>();
+        filters.append(&md);
+        let dialog = gtk::FileDialog::builder()
+            .title(tr("Create Markdown File"))
+            .accept_label(tr("Create"))
+            .initial_name(tr("Untitled.md"))
+            .modal(true)
+            .filters(&filters)
+            .default_filter(&md)
+            .build();
+        let start = self.current.borrow().as_ref().and_then(|f| f.parent()).or_else(|| self.folder.borrow().clone());
+        if let Some(start) = start {
+            dialog.set_initial_folder(Some(&start));
+        }
+        let this = self.clone();
+        glib::spawn_future_local(async move {
+            let file = match dialog.save_future(Some(&this.window)).await {
+                Ok(file) => file,
+                Err(e) if e.matches(gtk::DialogError::Dismissed) || e.matches(gtk::DialogError::Cancelled) => return,
+                Err(e) => {
+                    this.toast(e.message(), 5);
+                    return;
+                }
+            };
+            if !this.flush_save() {
+                return;
+            }
+            match create_markdown_file(&file).await {
+                Ok(()) => {
+                    this.open_file(&file, true, None, false, 0.0);
+                    if this.mode.get().shows_source() {
+                        this.source.grab_focus();
+                    } else {
+                        this.doc.grab_focus();
+                    }
+                }
+                Err(e) => {
+                    let dialog = adw::AlertDialog::new(
+                        Some(&tr("Unable to Create File")),
+                        Some(&format!("{}\n\n{}", display_path(&file), e.message())),
+                    );
+                    dialog.add_response("close", &tr("Close"));
+                    dialog.present(Some(&this.window));
+                }
+            }
+        });
     }
 
     fn choose_file(self: &Rc<Self>) {
@@ -2535,7 +2605,8 @@ fn main_menu() -> gio::Menu {
         }
         menu.append_section(None, &s);
     };
-    section(&[(tr("New Window"), "app.new-window"), (tr("Find"), "win.find"), (tr("Reload"), "win.reload")]);
+    section(&[(tr("Create Markdown File…"), "win.new-file"), (tr("New Window"), "app.new-window"),
+        (tr("Find"), "win.find"), (tr("Reload"), "win.reload")]);
     let text = crate::application::size_menu();
     text.append_submenu(Some(&tr("Font")), &crate::application::font_menu());
     menu.append_section(None, &text);
@@ -2550,4 +2621,34 @@ fn main_menu() -> gio::Menu {
     }
     section(&last);
     menu
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_markdown_file_is_empty_and_existing_files_are_preserved() {
+        let dir = std::env::temp_dir().join(format!("amoxtli-new-file-{}", glib::uuid_string_random()));
+        std::fs::create_dir(&dir).unwrap();
+        let path = dir.join("nota.md");
+        let file = gio::File::for_path(&path);
+        let context = glib::MainContext::new();
+        context.with_thread_default(|| {
+            context.block_on(async {
+                create_markdown_file(&file).await.unwrap();
+                assert_eq!(std::fs::read(&path).unwrap(), b"");
+                // A save chooser may have already provided an empty destination.
+                create_markdown_file(&file).await.unwrap();
+                std::fs::write(&path, "# Mis notas\n").unwrap();
+                let error = create_markdown_file(&file).await.unwrap_err();
+                assert!(error.matches(gio::IOErrorEnum::Exists));
+                assert_eq!(std::fs::read_to_string(&path).unwrap(), "# Mis notas\n");
+                let missing = gio::File::for_path(dir.join("missing/nota.md"));
+                assert!(create_markdown_file(&missing).await.is_err());
+                assert!(!dir.join("missing").exists());
+            });
+        }).unwrap();
+        std::fs::remove_dir_all(dir).unwrap();
+    }
 }

@@ -349,7 +349,10 @@ mod tests {
     fn strip_grows_with_the_text() {
         assert!(strip_height(2.0) > strip_height(1.0));
         assert_eq!(RichView::chip_text(Some("ts")), "TypeScript ⌄");
-        assert_eq!(RichView::chip_text(Some("rust")), "rust ⌄");
+        assert_eq!(RichView::chip_text(Some("rust")), "Rust ⌄");
+        assert_eq!(RichView::chip_text(Some("hpp")), "C++ ⌄");
+        assert_eq!(RichView::chip_text(Some("yml")), "YAML ⌄");
+        assert_eq!(RichView::chip_text(Some("cobol")), "cobol ⌄");
     }
 }
 

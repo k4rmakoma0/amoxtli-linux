@@ -80,6 +80,15 @@ flatpak install --user http://127.0.0.1:8000/amoxtli.flatpakref
 
 ## Single-file bundle (GitHub releases)
 
+Build a versioned bundle and its SHA-256 checksum in `dist/`:
+
+```sh
+tools/build-flatpak.sh
+```
+
+The helper uses the installed `flatpak-builder`, or `org.flatpak.Builder`, and
+includes all translations without changing the development manifest.
+
 Bundles can't carry the separate `.Locale` extension, so build them with
 `separate-locales: false` added to the manifest, then:
 

@@ -20,7 +20,7 @@
     <ul>
       <li>Source, formatted and split views, all editable, scrolling together</li>
       <li>Formatting tools, lists that continue as you type, editable tables</li>
-      <li>Code blocks colored by language</li>
+      <li>Code blocks colored by language, with 20 languages to choose from</li>
       <li>Saves as you go, and never over a file another app changed</li>
       <li>Table of contents that follows your reading position</li>
       <li>Browse whole folders of notes</li>
@@ -73,6 +73,16 @@
   </screenshots>
 
   <releases>
+    <release version="2.1.0" date="2026-11-14">
+      <description>
+        <p>Create Markdown documents from the welcome screen and highlight more languages.</p>
+        <ul>
+          <li>Create an empty Markdown file from the welcome screen, the main menu or Ctrl+Shift+N, then start editing immediately</li>
+          <li>Syntax highlighting and language selection for Ruby, Rust, Go, C, C++, Java, Kotlin, PHP, Lua, YAML and TOML in both editors</li>
+          <li>Recognizes common language aliases, raw and multiline strings, nested comments, and configuration keys</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.0" date="2026-11-12">
       <description>
         <p>Amoxtli is now a Markdown editor.</p>

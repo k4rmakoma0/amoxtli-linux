@@ -214,6 +214,7 @@ fn startup(app: &adw::Application) {
     update_size_actions(app);
 
     let accels: &[(&str, &[&str])] = &[
+        ("win.new-file", &["<Ctrl><Shift>n"]),
         ("win.open", &["<Ctrl>o"]),
         ("win.open-folder", &["<Ctrl><Shift>o"]),
         ("win.reload", &["<Ctrl>r", "F5"]),
@@ -289,6 +290,7 @@ fn shortcuts(app: &adw::Application) {
     let dialog = adw::ShortcutsDialog::new();
     let fixed: Vec<(String, Vec<(String, &str)>)> = vec![
         (tr("General"), vec![
+            (tr("Create Markdown File"), "<Ctrl><Shift>n"),
             (tr("Open File"), "<Ctrl>o"),
             (tr("Open Folder"), "<Ctrl><Shift>o"),
             (tr("New Window"), "<Ctrl>n"),

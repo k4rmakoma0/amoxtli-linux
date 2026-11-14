@@ -33,3 +33,7 @@ else
     /snap/bin/snapcraft pack --use-lxd --output=dist
 fi
 cp dist/*.snap "$ROOT/dist/"
+for package in dist/*.snap; do
+    name=$(basename "$package")
+    (cd "$ROOT/dist" && sha256sum "$name" > "$name.sha256")
+done

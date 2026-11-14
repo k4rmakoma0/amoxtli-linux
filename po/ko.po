@@ -12,147 +12,151 @@ msgstr ""
 msgid "Text size {percent}%"
 msgstr "텍스트 크기 {percent}%"
 
-#: src/application.rs:120 src/application.rs:320
+#: src/application.rs:120 src/application.rs:322
 msgid "Larger Text"
 msgstr "텍스트 크게"
 
-#: src/application.rs:121 src/application.rs:321
+#: src/application.rs:121 src/application.rs:323
 msgid "Smaller Text"
 msgstr "텍스트 작게"
 
-#: src/application.rs:122 src/application.rs:322
+#: src/application.rs:122 src/application.rs:324
 msgid "Normal Size"
 msgstr "기본 크기"
 
-#: src/application.rs:252
+#: src/application.rs:253
 msgid "Install Amoxtli first (run ./install.sh)"
 msgstr "먼저 Amoxtli를 설치하세요(./install.sh 실행)"
 
-#: src/application.rs:268
+#: src/application.rs:269
 msgid "Amoxtli is now your default Markdown app"
 msgstr "이제 Amoxtli가 기본 Markdown 앱입니다"
 
-#: src/application.rs:276
+#: src/application.rs:277
 msgid "Amoxtli Contributors"
 msgstr "Amoxtli 기여자"
 
-#: src/application.rs:278
+#: src/application.rs:279
 msgid "A native Markdown editor for GNOME and Linux."
 msgstr "GNOME과 Linux를 위한 네이티브 Markdown 편집기."
 
-#: src/application.rs:278
+#: src/application.rs:279
 msgid "Amoxtli means “book” in Nahuatl."
 msgstr "Amoxtli는 나와틀어로 ‘책’을 뜻합니다."
 
-#: src/application.rs:281
+#: src/application.rs:282
 msgid "translator-credits"
 msgstr ""
 
-#: src/application.rs:291
+#: src/application.rs:292
 msgid "General"
 msgstr "일반"
 
-#: src/application.rs:292 src/window.rs:157 src/window.rs:166
+#: src/application.rs:293 src/window.rs:694
+msgid "Create Markdown File"
+msgstr "Markdown 파일 만들기"
+
+#: src/application.rs:294 src/window.rs:171 src/window.rs:180
 msgid "Open File"
 msgstr "파일 열기"
 
-#: src/application.rs:293 src/window.rs:702
+#: src/application.rs:295 src/window.rs:777
 msgid "Open Folder"
 msgstr "폴더 열기"
 
-#: src/application.rs:294 src/window.rs:2363
+#: src/application.rs:296 src/window.rs:2608
 msgid "New Window"
 msgstr "새 창"
 
-#: src/application.rs:295
+#: src/application.rs:297
 msgid "Close Window"
 msgstr "창 닫기"
 
-#: src/application.rs:296
+#: src/application.rs:298
 msgid "Quit"
 msgstr "끝내기"
 
-#: src/application.rs:297 src/window.rs:2372
+#: src/application.rs:299 src/window.rs:2618
 msgid "Keyboard Shortcuts"
 msgstr "키보드 바로 가기"
 
-#: src/application.rs:299
+#: src/application.rs:301
 msgid "Editing"
 msgstr "편집"
 
-#: src/application.rs:300
+#: src/application.rs:302 src/window.rs:1420
 msgid "Save"
 msgstr "저장"
 
-#: src/application.rs:301
+#: src/application.rs:303
 msgid "Undo"
 msgstr "실행 취소"
 
-#: src/application.rs:302
+#: src/application.rs:304
 msgid "Redo"
 msgstr "다시 실행"
 
-#: src/application.rs:303 src/window.rs:256
+#: src/application.rs:305 src/window.rs:272
 msgid "Show Source"
 msgstr "소스 보기"
 
-#: src/application.rs:304
+#: src/application.rs:306
 msgid "Show Formatted"
 msgstr "서식 적용하여 보기"
 
-#: src/application.rs:305
+#: src/application.rs:307
 msgid "Show Split"
 msgstr "분할하여 보기"
 
-#: src/application.rs:307 src/editor/rich/mod.rs:208
+#: src/application.rs:309 src/editor/rich/mod.rs:210
 msgid "Document"
 msgstr "문서"
 
-#: src/application.rs:308 src/window.rs:186 src/window.rs:2363
+#: src/application.rs:310 src/window.rs:200 src/window.rs:2609
 msgid "Find"
 msgstr "찾기"
 
-#: src/application.rs:309 src/window.rs:2363
+#: src/application.rs:311 src/window.rs:2609
 msgid "Reload"
 msgstr "다시 불러오기"
 
-#: src/application.rs:310 src/window.rs:2368
+#: src/application.rs:312 src/window.rs:2614
 msgid "Edit in Text Editor"
 msgstr "텍스트 편집기에서 편집"
 
-#: src/application.rs:311 src/window.rs:2370
+#: src/application.rs:313 src/window.rs:2616
 msgid "Copy File Path"
 msgstr "파일 경로 복사"
 
-#: src/application.rs:312 src/window.rs:147
+#: src/application.rs:314 src/window.rs:161
 msgid "Back"
 msgstr "뒤로"
 
-#: src/application.rs:313 src/window.rs:149
+#: src/application.rs:315 src/window.rs:163
 msgid "Forward"
 msgstr "앞으로"
 
-#: src/application.rs:314
+#: src/application.rs:316
 msgid "Scroll to Top"
 msgstr "맨 위로 스크롤"
 
-#: src/application.rs:316
+#: src/application.rs:318
 msgid "View"
 msgstr "보기"
 
-#: src/application.rs:317 src/window.rs:142
+#: src/application.rs:319 src/window.rs:156
 msgid "Toggle Sidebar"
 msgstr "사이드바 전환"
 
-#: src/application.rs:318
+#: src/application.rs:320
 msgid "Show Contents"
 msgstr "목차 보기"
 
-#: src/application.rs:319
+#: src/application.rs:321
 msgid "Show Files"
 msgstr "파일 보기"
 
-#: src/application.rs:336 src/editor/mod.rs:289 src/window.rs:2334
+#: src/application.rs:338 src/editor/mod.rs:289 src/window.rs:2579
 msgid "Format"
 msgstr "포맷"
 
@@ -188,7 +192,7 @@ msgstr "주소"
 msgid "Insert Link"
 msgstr "링크 삽입"
 
-#: src/editor/dialogs.rs:20 src/editor/dialogs.rs:58 src/window.rs:1473
+#: src/editor/dialogs.rs:20 src/editor/dialogs.rs:58 src/window.rs:1623
 msgid "Cancel"
 msgstr "취소"
 
@@ -286,22 +290,22 @@ msgstr "스타일"
 msgid "More Formatting"
 msgstr "추가 서식"
 
-#: src/editor/rich/draw.rs:393
+#: src/editor/rich/draw.rs:394
 #, python-brace-format
 msgid "Task, done, level {level}"
 msgstr "할 일, 완료됨, 수준 {level}"
 
-#: src/editor/rich/draw.rs:394
+#: src/editor/rich/draw.rs:395
 #, python-brace-format
 msgid "Task, not done, level {level}"
 msgstr "할 일, 완료되지 않음, 수준 {level}"
 
-#: src/editor/rich/draw.rs:395
+#: src/editor/rich/draw.rs:396
 #, python-brace-format
 msgid "{number}, level {level}"
 msgstr "{number}, 수준 {level}"
 
-#: src/editor/rich/draw.rs:396
+#: src/editor/rich/draw.rs:397
 #, python-brace-format
 msgid "Bullet, level {level}"
 msgstr "글머리 기호, 수준 {level}"
@@ -310,15 +314,23 @@ msgstr "글머리 기호, 수준 {level}"
 msgid "Ctrl+click to open"
 msgstr "Ctrl+클릭하여 열기"
 
-#: src/editor/rich/language.rs:120
+#: src/editor/rich/language.rs:130
 msgid "Choose Language"
 msgstr "언어 선택"
 
-#: src/editor/rich/language.rs:210
+#: src/editor/rich/language.rs:181
+msgid "Copied"
+msgstr "복사됨"
+
+#: src/editor/rich/language.rs:181 src/editor/rich/language.rs:307
+msgid "Copy Code"
+msgstr "코드 복사"
+
+#: src/editor/rich/language.rs:280
 msgid "None"
 msgstr "없음"
 
-#: src/editor/rich/language.rs:237
+#: src/editor/rich/language.rs:308
 msgid "Language"
 msgstr "언어"
 
@@ -334,7 +346,7 @@ msgstr "제목 없음"
 msgid "This document has no table of contents"
 msgstr "이 문서에는 목차가 없습니다"
 
-#: src/sidebar.rs:191 src/window.rs:152 src/window.rs:240
+#: src/sidebar.rs:191 src/window.rs:166 src/window.rs:256
 msgid "Open Folder…"
 msgstr "폴더 열기…"
 
@@ -362,266 +374,278 @@ msgstr "고정폭"
 msgid "Rounded"
 msgstr "둥근"
 
-#: src/window.rs:131
+#: src/window.rs:145
 msgid "Contents"
 msgstr "목차"
 
-#: src/window.rs:131
+#: src/window.rs:145
 msgid "Table of Contents"
 msgstr "목차"
 
-#: src/window.rs:132
+#: src/window.rs:146
 msgid "Files"
 msgstr "파일"
 
-#: src/window.rs:132
+#: src/window.rs:146
 msgid "Folder"
 msgstr "폴더"
 
-#: src/window.rs:154
+#: src/window.rs:168
 msgid "Open"
 msgstr "열기"
 
-#: src/window.rs:158 src/window.rs:167
+#: src/window.rs:172 src/window.rs:181
 msgid "More Open Options"
 msgstr "추가 열기 옵션"
 
-#: src/window.rs:182
+#: src/window.rs:196
 msgid "Main Menu"
 msgstr "주 메뉴"
 
-#: src/window.rs:192
+#: src/window.rs:206
 msgid "Font and Text Size"
 msgstr "서체 및 텍스트 크기"
 
-#: src/window.rs:197
+#: src/window.rs:211
 msgid "Find in document"
 msgstr "문서에서 찾기"
 
-#: src/window.rs:200
+#: src/window.rs:214
 msgid "Previous Match"
 msgstr "이전 일치 항목"
 
-#: src/window.rs:202
+#: src/window.rs:216
 msgid "Next Match"
 msgstr "다음 일치 항목"
 
-#: src/window.rs:235
-msgid "Open a Markdown file or a folder of notes."
-msgstr "Markdown 파일이나 노트 폴더를 여세요."
+#: src/window.rs:249
+msgid "Create a Markdown file or open a file or folder."
+msgstr "Markdown 파일을 만들거나 파일 또는 폴더를 여세요."
 
-#: src/window.rs:235
+#: src/window.rs:249
 msgid "You can also drop files here."
 msgstr "여기에 파일을 끌어다 놓을 수도 있습니다."
 
-#: src/window.rs:238
+#: src/window.rs:252 src/window.rs:2608
+msgid "Create Markdown File…"
+msgstr "Markdown 파일 만들기…"
+
+#: src/window.rs:254
 msgid "Open File…"
 msgstr "파일 열기…"
 
-#: src/window.rs:245
+#: src/window.rs:261
 msgid "Choose a Document"
 msgstr "문서 선택"
 
-#: src/window.rs:246
+#: src/window.rs:262
 msgid "Select a Markdown file from the sidebar"
 msgstr "사이드바에서 Markdown 파일을 선택하세요"
 
-#: src/window.rs:248 src/window.rs:758
+#: src/window.rs:264 src/window.rs:836
 msgid "Unable to Open File"
 msgstr "파일을 열 수 없습니다"
 
-#: src/window.rs:254
+#: src/window.rs:270
 msgid "Document Too Large"
 msgstr "문서가 너무 큼"
 
-#: src/window.rs:265
+#: src/window.rs:281
 msgid "Amoxtli is not your default Markdown app"
 msgstr "Amoxtli가 기본 Markdown 앱이 아닙니다"
 
-#: src/window.rs:266
+#: src/window.rs:282
 msgid "Make Default"
 msgstr "기본값으로 설정"
 
-#: src/window.rs:666
+#: src/window.rs:689 src/window.rs:741
 msgid "Markdown Documents"
 msgstr "Markdown 문서"
 
-#: src/window.rs:674
+#: src/window.rs:695
+msgid "Create"
+msgstr "만들기"
+
+#: src/window.rs:696
+msgid "Untitled.md"
+msgstr "제목 없음.md"
+
+#: src/window.rs:729
+msgid "Unable to Create File"
+msgstr "파일을 만들 수 없음"
+
+#: src/window.rs:732
+msgid "Close"
+msgstr "닫기"
+
+#: src/window.rs:749
 msgid "Text Files"
 msgstr "텍스트 파일"
 
-#: src/window.rs:677
+#: src/window.rs:752
 msgid "All Files"
 msgstr "모든 파일"
 
-#: src/window.rs:684
+#: src/window.rs:759
 msgid "Open Markdown File"
 msgstr "Markdown 파일 열기"
 
-#: src/window.rs:764
+#: src/window.rs:842
 msgid "Invalid Encoding"
 msgstr "유효하지 않은 인코딩"
 
-#: src/window.rs:767
+#: src/window.rs:845
 msgid "This file isn't UTF-8 text, so Amoxtli can't show or edit it. It hasn't been changed."
 msgstr "이 파일은 UTF-8 텍스트가 아니어서 Amoxtli에서 표시하거나 편집할 수 없습니다. 파일은 변경되지 않았습니다."
 
-#: src/window.rs:923
+#: src/window.rs:1002
 #, python-brace-format
 msgid "This document takes {size}. The formatted view handles documents up to {limit}; you can read and edit it in the source."
 msgstr "이 문서의 크기는 {size}입니다. 서식 보기는 최대 {limit}의 문서를 지원합니다. 원본에서 읽고 편집할 수 있습니다."
 
-#: src/window.rs:1310
+#: src/window.rs:1398
 #, python-brace-format
 msgid "Couldn’t save “{name}”. Check that you have permission to change it."
 msgstr "‘{name}’을(를) 저장할 수 없습니다. 변경할 권한이 있는지 확인하십시오."
 
-#: src/window.rs:1381
+#: src/window.rs:1531 src/window.rs:2219
 msgid "File Not Found"
 msgstr "파일을 찾을 수 없음"
 
-#: src/window.rs:1381
+#: src/window.rs:1531
 #, python-brace-format
 msgid "“{name}” was moved or deleted."
 msgstr "‘{name}’이(가) 이동되거나 삭제되었습니다."
 
-#: src/window.rs:1388
+#: src/window.rs:1538
 msgid "File Deleted"
 msgstr "파일이 삭제됨"
 
-#: src/window.rs:1389
+#: src/window.rs:1539
 #, python-brace-format
 msgid "“{name}” was moved or deleted in another app. Save your version again?"
 msgstr "‘{name}’이(가) 다른 앱에서 이동되거나 삭제되었습니다. 내 버전을 다시 저장하겠습니까?"
 
-#: src/window.rs:1391 src/window.rs:1473
+#: src/window.rs:1541 src/window.rs:1623
 msgid "Discard Changes"
 msgstr "변경 사항 버리기"
 
-#: src/window.rs:1391
+#: src/window.rs:1541
 msgid "Save Again"
 msgstr "다시 저장"
 
-#: src/window.rs:1431
+#: src/window.rs:1581
 msgid "File Changed on Disk"
 msgstr "디스크의 파일이 변경됨"
 
-#: src/window.rs:1433
+#: src/window.rs:1583
 #, python-brace-format
 msgid "“{name}” was changed in another app. Which version do you want to keep?"
 msgstr "‘{name}’이(가) 다른 앱에서 변경되었습니다. 어떤 버전을 유지하겠습니까?"
 
-#: src/window.rs:1438
+#: src/window.rs:1588
 msgid "Use Disk Version"
 msgstr "디스크 버전 사용"
 
-#: src/window.rs:1441
+#: src/window.rs:1591
 msgid "Keep Mine"
 msgstr "내 버전 유지"
 
-#: src/window.rs:1470
+#: src/window.rs:1620
 msgid "Unsaved Changes"
 msgstr "저장되지 않은 변경 사항"
 
-#: src/window.rs:1471
+#: src/window.rs:1621
 #, python-brace-format
 msgid "“{name}” couldn’t be saved. Close it anyway and lose your changes?"
 msgstr "‘{name}’을(를) 저장할 수 없습니다. 그래도 닫고 변경 사항을 버리겠습니까?"
 
-#: src/window.rs:1537
+#: src/window.rs:1687
 #, python-brace-format
 msgid "File not found: {name}"
 msgstr "파일을 찾을 수 없음: {name}"
 
-#: src/window.rs:1669
+#: src/window.rs:1819
 msgid "No results"
 msgstr "결과 없음"
 
-#: src/window.rs:1704
+#: src/window.rs:1854
 #, python-brace-format
 msgid "{current} of {total}"
 msgstr "{current} / {total}"
 
-#: src/window.rs:1714
+#: src/window.rs:1864
 msgid "less than 1 min read"
 msgstr "1분 미만 읽기"
 
-#: src/window.rs:1714
+#: src/window.rs:1864
 msgid "0 min read"
 msgstr "0분 읽기"
 
-#: src/window.rs:1718
+#: src/window.rs:1868
 #, python-brace-format
 msgid "{n} min read"
 msgid_plural "{n} min read"
 msgstr[0] "{n}분 읽기"
 
-#: src/window.rs:1722
+#: src/window.rs:1872
 #, python-brace-format
 msgid "{hours} h {minutes} min read"
 msgstr "{hours}시간 {minutes}분 읽기"
 
-#: src/window.rs:1724
+#: src/window.rs:1874
 #, python-brace-format
 msgid "{hours} h read"
 msgstr "{hours}시간 읽기"
 
-#: src/window.rs:1752
+#: src/window.rs:1902
 #, python-brace-format
 msgid "{selected} of {total} word"
 msgid_plural "{selected} of {total} words"
 msgstr[0] "{selected} / {total} 단어"
 
-#: src/window.rs:1758
+#: src/window.rs:1908
 #, python-brace-format
 msgid "{n} word"
 msgid_plural "{n} words"
 msgstr[0] "{n}단어"
 
-#: src/window.rs:2293
+#: src/window.rs:2538
 msgid "Path copied"
 msgstr "경로가 복사되었습니다"
 
-#: src/window.rs:2333
+#: src/window.rs:2578
 msgid "Source"
 msgstr "소스"
 
-#: src/window.rs:2333
+#: src/window.rs:2578
 msgid "Show the Markdown source"
 msgstr "Markdown 원본 보기"
 
-#: src/window.rs:2334
+#: src/window.rs:2579
 msgid "Show the formatted document"
 msgstr "서식이 적용된 문서 보기"
 
-#: src/window.rs:2335
+#: src/window.rs:2580
 msgid "Split"
 msgstr "분할"
 
-#: src/window.rs:2335
+#: src/window.rs:2580
 msgid "Show the source and the formatted document side by side"
 msgstr "원본과 서식이 적용된 문서를 나란히 보기"
 
-#: src/window.rs:2365
+#: src/window.rs:2611
 msgid "Font"
 msgstr "서체"
 
-#: src/window.rs:2369
+#: src/window.rs:2615
 msgid "Show in Files"
 msgstr "파일에서 보기"
 
-#: src/window.rs:2372
+#: src/window.rs:2618
 msgid "About Amoxtli"
 msgstr "Amoxtli 정보"
 
-#: src/window.rs:2374
+#: src/window.rs:2620
 msgid "Set as Default Markdown App"
 msgstr "기본 Markdown 앱으로 설정"
-
-#: src/editor/rich/language.rs
-msgid "Copy Code"
-msgstr "코드 복사"
-
-#: src/editor/rich/language.rs
-msgid "Copied"
-msgstr "복사됨"

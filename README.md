@@ -22,16 +22,18 @@ Pango-shaped text in a `GtkTextView`, tables as grids of editable cells, images 
 
 ## Features
 
-- Open files (`Ctrl+O`), folders (`Ctrl+Shift+O`), drag & drop, or `amoxtli file.md|folder`
+- Create Markdown files (`Ctrl+Shift+N`), open files (`Ctrl+O`), folders (`Ctrl+Shift+O`),
+  drag & drop, or `amoxtli file.md|folder`
 - Three views (`Ctrl+Alt+3/4/5`): **Source**, the Markdown with live highlighting; **Format**, a
   word-processor view where Markdown never shows; and **Split**, both side by side, both editable,
   scrolling together block by block
 - Formatting tools in both editors (`Ctrl+B`, `Ctrl+I`, `Ctrl+1…6` for headings, `Ctrl+K` for links…);
   lists continue on Return and end on an empty item, `Tab` nests them, `# ` typed starts a heading,
   tables are edited cell by cell. Links open with `Ctrl+click` in the formatted view
-- Code blocks colored by language in both editors (Swift, Python, JavaScript, TypeScript, JSON,
-  HTML/XML, CSS, SQL and Shell, with a small hand-written lexer); in the formatted view, a chip on each
-  block shows its language and changes it, with a button to copy the entire block
+- Code blocks colored by language in both editors (C, C++, CSS, Go, HTML/XML, Java, JavaScript, JSON,
+  Kotlin, Lua, PHP, Python, Ruby, Rust, Shell, SQL, Swift, TOML, TypeScript and YAML, with a small
+  hand-written lexer); in the formatted view, a chip on each block shows its language and changes it,
+  with a button to copy the entire block
 - Opening a file never rewrites it. Edits are saved a second after you stop typing (or `Ctrl+S`), and
   never over a file another app changed: Amoxtli asks which version to keep. A renamed file is followed;
   a deleted one is never brought back unasked
@@ -82,8 +84,8 @@ you can also get a single-file Flatpak bundle (no automatic updates):
 **Prebuilt binary** (needs GTK ≥ 4.20 and libadwaita ≥ 1.8, i.e. GNOME 49+):
 
 ```sh
-tar xzf amoxtli-2.0.0-x86_64-linux.tar.gz
-cd amoxtli-2.0.0-x86_64-linux
+tar xzf amoxtli-2.1.0-x86_64-linux.tar.gz
+cd amoxtli-2.1.0-x86_64-linux
 ./install.sh            # or ./install.sh --default to make it your Markdown app
 ```
 
@@ -165,6 +167,8 @@ src/typography.rs    font and text size choices (tested)
 po/                  translations (.po) and template (.pot)
 tools/i18n.py        extract / merge / compile / check translations
 tools/package.sh     build the prebuilt release tarball into dist/
+tools/build-flatpak.sh  build the Flatpak release bundle and checksum into dist/
+tools/build-snap.sh  build the Snap release package and checksum into dist/
 tools/flatpak-cargo-sources.py  offline crate sources for the Flatpak build
 build-aux/flatpak/   Flatpak manifest and Flathub submission notes
 data/                .desktop entry, AppStream metainfo, app and toolbar icons

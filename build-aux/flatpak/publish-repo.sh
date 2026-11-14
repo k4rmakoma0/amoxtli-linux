@@ -43,7 +43,7 @@ cat > "$OUT/amoxtli.flatpakref" <<EOF
 Name=$APP_ID
 Branch=stable
 Title=Amoxtli
-Comment=A native Markdown viewer
+Comment=A native Markdown editor
 Url=$BASE_URL/repo/
 SuggestRemoteName=amoxtli
 Homepage=https://github.com/k4rmakoma0/amoxtli-linux
@@ -86,7 +86,7 @@ cat > "$OUT/index.html" <<EOF
 <body>
 <header>
   <img src="icon.svg" alt="">
-  <div><h1>Amoxtli</h1><div>A native Markdown viewer for Linux · version $VERSION</div></div>
+  <div><h1>Amoxtli</h1><div>A native Markdown editor for Linux · version $VERSION</div></div>
 </header>
 <p>Install it from this Flatpak repository to get automatic updates through GNOME Software
 or <code>flatpak update</code>.</p>

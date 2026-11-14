@@ -29,7 +29,7 @@ or bundle another copy of libc to silence it.
 ## Install and test locally
 
 ```sh
-sudo snap install --dangerous dist/amoxtli_2.0.0_amd64.snap
+sudo snap install --dangerous dist/amoxtli_2.1.0_amd64.snap
 snap connections amoxtli
 amoxtli examples/README.md
 ```
@@ -42,6 +42,9 @@ Use scratch documents for editing tests. Verify:
 - Change a document externally and check conflict handling.
 - Cancel a system Save dialog and check that edits are retained.
 - Copy a code block and check that the document and selection are unchanged.
+- Create a Markdown file from the welcome screen and with Ctrl+Shift+N; cancel
+  the chooser and choose an existing document to check that its content is kept.
+- Check all 20 languages in the code block selector and highlighting in both editors.
 - Launch a second document while the app is running (D-Bus registration).
 - Check light/dark appearance, custom toolbar icons and a non-English locale.
 - Open links and use "Edit in Text Editor" and "Show in Files" through portals.
